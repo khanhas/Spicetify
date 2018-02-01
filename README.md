@@ -16,8 +16,13 @@ These CSS files are extracted first then go through a preparation process that f
 
 When user applies his/her own colors scheme, all keywords are replaced with actual colors value, both in hex and RRR,GGG,BBB format. 
 
-After that, CSS files are updated in Spotify directory
-To sastify any web developer that has experience with CSS, **Inject CSS** option will allow you to customize your Spotify client even more.  
+After that, modded CSS files are updated directly to Spotify's SPA package.
+
+## Advanced customization
+To sastify any web developer that has experience with CSS, **Inject CSS** option will allow you to customize your Spotify client even more. 
+
+Choose **Edit CSS** button to open up user.css file. Find element class name and id in CSS files in @Resources\Extracted folder. 
+
 You can use my internal keywords for colors instead of hard coding color value into CSS, so you can publish your Spotify theme and keep it customizable. Remember, hex value has to start with `#` and doesn't have alpha value. 
  
 ```
