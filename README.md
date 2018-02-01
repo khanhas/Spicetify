@@ -1,5 +1,7 @@
 ![Logo](LOGO.svg)
 
+[![GitHub release](https://img.shields.io/github/release/khanhas/Spicetify/all.svg?colorB=97CA00?label=version)](https://github.com/khanhas/Spicetify/releases/latest) [![Github All Releases](https://img.shields.io/github/downloads/khanhas/Spicetify/total.svg?colorB=97CA00)](https://github.com/khanhas/Spicetify/releases)  
+
 ## How to use
 **1.** Download and install [**Rainmeter**](https://www.rainmeter.net/) (require version >= 4.1)  
 **2.** Download and install rmskin package in [**release page**](https://github.com/khanhas/Spicetify/releases)  
