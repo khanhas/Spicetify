@@ -11,6 +11,8 @@
 
 ![Demo1](https://i.imgur.com/pXR5Pkb.png)
 
+![Demo2](https://i.imgur.com/m3FjX6n.png)
+
 ## How it works
 Spotify UI is HTML/CSS and runs inside Chromium Embedded Framework<sup>[[1]](https://www.quora.com/How-is-JavaScript-used-within-the-Spotify-desktop-application-Is-it-packaged-up-and-run-locally-only-retrieving-the-assets-as-and-when-needed-What-JavaScript-VM-is-used)</sup>. All CSS files controlling element attributes and interaction are packed in SPA files (they basically are ZIP).  
 
