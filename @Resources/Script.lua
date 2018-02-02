@@ -162,6 +162,7 @@ end
 function Unzip()
 	bC = bC + 1
 	if bC > totalSpa then
+		glue = nil
 		SKIN:Bang('!Refresh')
 		return
 	end
@@ -199,87 +200,99 @@ function PrepareCSS()
 		Unzip()
 		return
 	end
-	local f = io.open(nP, 'r')
-	local d = f:read("*a")
-	f:close()
-	f = io.open(nP, 'w')
 
-	-- Replace default color scheme with our keywords.
-	-- When we apply custom color scheme, we just find
-	-- and replace keywords, no need to search color
-	-- again and again.
-	d = d:gsub("1ed660", "modspotify_sidebar_indicator_and_hover_button_bg")
-	d = d:gsub("1ed760", "modspotify_sidebar_indicator_and_hover_button_bg")
-	d = d:gsub("1db954", "modspotify_indicator_fg_and_button_bg")
-	d = d:gsub("1df369", "modspotify_indicator_fg_and_button_bg")
-	d = d:gsub("1df269", "modspotify_indicator_fg_and_button_bg")
-	d = d:gsub("1cd85e", "modspotify_indicator_fg_and_button_bg")
-	d = d:gsub("1bd85e", "modspotify_indicator_fg_and_button_bg")
-	d = d:gsub("18ac4d", "modspotify_selected_button")
-	d = d:gsub("18ab4d", "modspotify_selected_button")
-	d = d:gsub("179443", "modspotify_pressing_button_bg")
-	d = d:gsub("14833b", "modspotify_pressing_button_bg")
-	d = d:gsub("282828", "modspotify_main_bg")
-	d = d:gsub("121212", "modspotify_main_bg")
-	d = d:gsub("rgba%(18, 18, 18, ([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
-	d = d:gsub("181818", "modspotify_sidebar_and_player_bg")
-	d = d:gsub("rgba%(18,19,20,([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
-	d = d:gsub("000000", "modspotify_sidebar_and_player_bg")
-	d = d:gsub("333333", "modspotify_scrollbar_fg_and_selected_row_bg")
-	d = d:gsub("3f3f3f", "modspotify_scrollbar_fg_and_selected_row_bg")
-	d = d:gsub("535353", "modspotify_scrollbar_fg_and_selected_row_bg")
-	d = d:gsub("404040", "modspotify_slider_bg")
-	d = d:gsub("rgba%(80,55,80,([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
-	d = d:gsub("rgba%(40, 40, 40, ([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
-	d = d:gsub("rgba%(40,40,40,([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
-	d = d:gsub("rgba%(24, 24, 24, ([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
-	d = d:gsub("rgba%(18, 19, 20, ([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
-	d = d:gsub("#000011", "#modspotify_sidebar_and_player_bg")
-	d = d:gsub("#0a1a2d", "#modspotify_sidebar_and_player_bg")
-	d = d:gsub("ffffff", "modspotify_main_fg")
-	d = d:gsub("f8f8f7", "modspotify_pressing_fg")
-	d = d:gsub("fcfcfc", "modspotify_pressing_fg")
-	d = d:gsub("d9d9d9", "modspotify_pressing_fg")
-	d = d:gsub("adafb2", "modspotify_secondary_fg")
-	d = d:gsub("c8c8c8", "modspotify_secondary_fg")
-	d = d:gsub("a0a0a0", "modspotify_secondary_fg")
-	d = d:gsub("bec0bb", "modspotify_secondary_fg")
-	d = d:gsub("bababa", "modspotify_secondary_fg")
-	d = d:gsub("b3b3b3", "modspotify_secondary_fg")
-	d = d:gsub("rgba%(179, 179, 179, ([%d%.]+)%)", "rgba(modspotify_rgb_secondary_fg,%1)")
-	d = d:gsub("cccccc", "modspotify_pressing_button_fg")
-	d = d:gsub("ededed", "modspotify_pressing_button_fg")
-	d = d:gsub("4687d6", "modspotify_miscellaneous_bg")
-	d = d:gsub("rgba%(70, 135, 214, ([%d%.]+)%)", "rgba(modspotify_rgb_miscellaneous_bg,%1)")
-	d = d:gsub("2e77d0", "modspotify_miscellaneous_hover_bg")
-	d = d:gsub("rgba%(51,153,255,([%d%.]+)%)", "rgba(modspotify_rgb_miscellaneous_hover_bg,%1)")
-	d = d:gsub("rgba%(30,50,100,([%d%.]+)%)", "rgba(modspotify_rgb_miscellaneous_hover_bg,%1)")
-	d = d:gsub("rgba%(24, 24, 24, ([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
-	d = d:gsub("rgba%(25,20,20,([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
-	d = d:gsub("rgba%(160, 160, 160, ([%d%.]+)%)", "rgba(modspotify_rgb_pressing_button_fg,%1)")
-	d = d:gsub("rgba%(255, 255, 255, ([%d%.]+)%)", "rgba(modspotify_rgb_pressing_button_fg,%1)")
-	d = d:gsub("#ddd;", "#modspotify_pressing_button_fg;")
-	d = d:gsub("#000;", "#modspotify_sidebar_and_player_bg;")
-	d = d:gsub("#000 ", "#modspotify_sidebar_and_player_bg ")
-	d = d:gsub("#333;", "#modspotify_scrollbar_fg_and_selected_row_bg;")
-	d = d:gsub("#333 ", "#modspotify_scrollbar_fg_and_selected_row_bg ")
-	d = d:gsub("#444;", "#modspotify_slider_bg;")
-	d = d:gsub("#444 ", "#modspotify_slider_bg ")
-	d = d:gsub("#fff;", "#modspotify_main_fg;")
-	d = d:gsub("#fff ", "#modspotify_main_fg ")
-	d = d:gsub(" black;", " #modspotify_sidebar_and_player_bg;")
-	d = d:gsub(" black ", " #modspotify_sidebar_and_player_bg ")
-	d = d:gsub(" gray ", " #modspotify_main_bg ")
-	d = d:gsub(" gray;", " #modspotify_main_bg;")
-	d = d:gsub(" lightgray ", " #modspotify_pressing_button_fg ")
-	d = d:gsub(" lightgray;", " #modspotify_pressing_button_fg;")
-	d = d:gsub(" white;", " #modspotify_main_fg;")
-	d = d:gsub(" white ", " #modspotify_main_fg ")
-	d = d:gsub("rgba%(0, 0, 0, ([%d%.]+)%)", "rgba(modspotify_rgb_cover_overlay_and_shadow,%1)")
-	d = d:gsub("rgba%(0,0,0,([%d%.]+)%)", "rgba(modspotify_rgb_cover_overlay_and_shadow,%1)")
-	d = d:gsub("#fff", "#modspotify_main_fg")
-	d = d:gsub("#000", "#modspotify_sidebar_and_player_bg")
-	d = table.concat({d, "\n.SearchInput__input {\nbackground-color: #modspotify_sidebar_and_player_bg !important;\ncolor: #modspotify_secondary_fg !important;}\n"})
+	local d = ''
+
+	if glue and nP:match("glus%.css$") then
+		d = glue
+	else
+		local f = io.open(nP, 'r')
+		d = f:read("*a")
+		f:close()
+		-- Replace default color scheme with our keywords.
+		-- When we apply custom color scheme, we just find
+		-- and replace keywords, no need to search color
+		-- again and again.
+		d = d:gsub("1ed660", "modspotify_sidebar_indicator_and_hover_button_bg")
+		d = d:gsub("1ed760", "modspotify_sidebar_indicator_and_hover_button_bg")
+		d = d:gsub("1db954", "modspotify_indicator_fg_and_button_bg")
+		d = d:gsub("1df369", "modspotify_indicator_fg_and_button_bg")
+		d = d:gsub("1df269", "modspotify_indicator_fg_and_button_bg")
+		d = d:gsub("1cd85e", "modspotify_indicator_fg_and_button_bg")
+		d = d:gsub("1bd85e", "modspotify_indicator_fg_and_button_bg")
+		d = d:gsub("18ac4d", "modspotify_selected_button")
+		d = d:gsub("18ab4d", "modspotify_selected_button")
+		d = d:gsub("179443", "modspotify_pressing_button_bg")
+		d = d:gsub("14833b", "modspotify_pressing_button_bg")
+		d = d:gsub("282828", "modspotify_main_bg")
+		d = d:gsub("121212", "modspotify_main_bg")
+		d = d:gsub("rgba%(18, 18, 18, ([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
+		d = d:gsub("181818", "modspotify_sidebar_and_player_bg")
+		d = d:gsub("rgba%(18,19,20,([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
+		d = d:gsub("000000", "modspotify_sidebar_and_player_bg")
+		d = d:gsub("333333", "modspotify_scrollbar_fg_and_selected_row_bg")
+		d = d:gsub("3f3f3f", "modspotify_scrollbar_fg_and_selected_row_bg")
+		d = d:gsub("535353", "modspotify_scrollbar_fg_and_selected_row_bg")
+		d = d:gsub("404040", "modspotify_slider_bg")
+		d = d:gsub("rgba%(80,55,80,([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
+		d = d:gsub("rgba%(40, 40, 40, ([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
+		d = d:gsub("rgba%(40,40,40,([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
+		d = d:gsub("rgba%(24, 24, 24, ([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
+		d = d:gsub("rgba%(18, 19, 20, ([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
+		d = d:gsub("#000011", "#modspotify_sidebar_and_player_bg")
+		d = d:gsub("#0a1a2d", "#modspotify_sidebar_and_player_bg")
+		d = d:gsub("ffffff", "modspotify_main_fg")
+		d = d:gsub("f8f8f7", "modspotify_pressing_fg")
+		d = d:gsub("fcfcfc", "modspotify_pressing_fg")
+		d = d:gsub("d9d9d9", "modspotify_pressing_fg")
+		d = d:gsub("adafb2", "modspotify_secondary_fg")
+		d = d:gsub("c8c8c8", "modspotify_secondary_fg")
+		d = d:gsub("a0a0a0", "modspotify_secondary_fg")
+		d = d:gsub("bec0bb", "modspotify_secondary_fg")
+		d = d:gsub("bababa", "modspotify_secondary_fg")
+		d = d:gsub("b3b3b3", "modspotify_secondary_fg")
+		d = d:gsub("rgba%(179, 179, 179, ([%d%.]+)%)", "rgba(modspotify_rgb_secondary_fg,%1)")
+		d = d:gsub("cccccc", "modspotify_pressing_button_fg")
+		d = d:gsub("ededed", "modspotify_pressing_button_fg")
+		d = d:gsub("4687d6", "modspotify_miscellaneous_bg")
+		d = d:gsub("rgba%(70, 135, 214, ([%d%.]+)%)", "rgba(modspotify_rgb_miscellaneous_bg,%1)")
+		d = d:gsub("2e77d0", "modspotify_miscellaneous_hover_bg")
+		d = d:gsub("rgba%(51,153,255,([%d%.]+)%)", "rgba(modspotify_rgb_miscellaneous_hover_bg,%1)")
+		d = d:gsub("rgba%(30,50,100,([%d%.]+)%)", "rgba(modspotify_rgb_miscellaneous_hover_bg,%1)")
+		d = d:gsub("rgba%(24, 24, 24, ([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
+		d = d:gsub("rgba%(25,20,20,([%d%.]+)%)", "rgba(modspotify_rgb_sidebar_and_player_bg,%1)")
+		d = d:gsub("rgba%(160, 160, 160, ([%d%.]+)%)", "rgba(modspotify_rgb_pressing_button_fg,%1)")
+		d = d:gsub("rgba%(255, 255, 255, ([%d%.]+)%)", "rgba(modspotify_rgb_pressing_button_fg,%1)")
+		d = d:gsub("#ddd;", "#modspotify_pressing_button_fg;")
+		d = d:gsub("#000;", "#modspotify_sidebar_and_player_bg;")
+		d = d:gsub("#000 ", "#modspotify_sidebar_and_player_bg ")
+		d = d:gsub("#333;", "#modspotify_scrollbar_fg_and_selected_row_bg;")
+		d = d:gsub("#333 ", "#modspotify_scrollbar_fg_and_selected_row_bg ")
+		d = d:gsub("#444;", "#modspotify_slider_bg;")
+		d = d:gsub("#444 ", "#modspotify_slider_bg ")
+		d = d:gsub("#fff;", "#modspotify_main_fg;")
+		d = d:gsub("#fff ", "#modspotify_main_fg ")
+		d = d:gsub(" black;", " #modspotify_sidebar_and_player_bg;")
+		d = d:gsub(" black ", " #modspotify_sidebar_and_player_bg ")
+		d = d:gsub(" gray ", " #modspotify_main_bg ")
+		d = d:gsub(" gray;", " #modspotify_main_bg;")
+		d = d:gsub(" lightgray ", " #modspotify_pressing_button_fg ")
+		d = d:gsub(" lightgray;", " #modspotify_pressing_button_fg;")
+		d = d:gsub(" white;", " #modspotify_main_fg;")
+		d = d:gsub(" white ", " #modspotify_main_fg ")
+		d = d:gsub("rgba%(0, 0, 0, ([%d%.]+)%)", "rgba(modspotify_rgb_cover_overlay_and_shadow,%1)")
+		d = d:gsub("rgba%(0,0,0,([%d%.]+)%)", "rgba(modspotify_rgb_cover_overlay_and_shadow,%1)")
+		d = d:gsub("#fff", "#modspotify_main_fg")
+		d = d:gsub("#000", "#modspotify_sidebar_and_player_bg")
+		d = table.concat({d, "\n.SearchInput__input {\nbackground-color: #modspotify_sidebar_and_player_bg !important;\ncolor: #modspotify_secondary_fg !important;}\n"})
+
+		--Because all glue.css in all spa are the same, so
+		--just store modded glue.css and we can apply to all remaining glue.css
+		if not glue and nP:match("glue%.css$") then
+			glue = d
+		end
+	end
+
 	f = io.open(nP, 'w')
 	f:write(d)
 	f:close()
@@ -297,6 +310,10 @@ function StartMod()
 		if userCSS then
 			customCSS = userCSS:read('*a')
 			userCSS:close()
+			for k, v in ipairs(color) do
+				customCSS = customCSS:gsub("modspotify_" .. v.var, v.hex)
+				customCSS = customCSS:gsub("modspotify_rgb_" .. v.var, v.rgb)
+			end
 		else
 			customCSS = ''
 			print('user.css is not found in @Resource folder. Please make one.')
@@ -308,6 +325,7 @@ end
 function ModSpa()
 	nC = nC + 1
 	if nC > totalSpa then
+		glue = nil
 		status = "Mod succeeded"
 		SKIN:Bang('"#@#AutoRestart.exe"')
 		return
@@ -318,9 +336,9 @@ function ModSpa()
 	status = 'Updating '.. n
 	curSpa = nC
 	if theme then
-		SKIN:Bang('!SetOption', 'Replicate', 'Parameter', 'xcopy "Extracted\\' .. n:gsub('%.', '_') .. '\\themed" "Decomp\\css" /y')
+		SKIN:Bang('!SetOption', 'Replicate', 'Parameter', 'robocopy "Extracted\\' .. n:gsub('%.', '_') .. '\\themed" "Decomp\\css"')
 	else
-		SKIN:Bang('!SetOption', 'Replicate', 'Parameter', 'xcopy "Extracted\\' .. n:gsub('%.', '_') .. '\\raw" "Decomp\\css" /y')
+		SKIN:Bang('!SetOption', 'Replicate', 'Parameter', 'robocopy "Extracted\\' .. n:gsub('%.', '_') .. '\\raw" "Decomp\\css"')
 	end
 	SKIN:Bang('!UpdateMeasure', 'Replicate')
 	SKIN:Bang('!CommandMeasure', 'Replicate', 'Run')
@@ -337,6 +355,7 @@ function StartCSS()
 	SKIN:Bang('!CommandMeasure', 'CSSFileView', 'Update')
 end
 
+
 function ModCSS()
 	SKIN:Bang('!SetOption', 'CSSFileName', 'Index', c2)
 	SKIN:Bang('!UpdateMeasure', 'CSSFileName')
@@ -346,31 +365,41 @@ function ModCSS()
 		return
 	end
 
-	local f = io.open(n2, 'r')
-	local d = f:read("*a")
-	f:close()
+	local d = ''
 
-	if injectCSS then
-		d = table.concat({d, customCSS})
-	end
+	if glue and n2:match("glue%.css$") then
+		d = glue
+	else
+		local f = io.open(n2, 'r')
+		d = f:read("*a")
+		f:close()
 
-	-- Replace keywords that we prepared when backing up and unzipping
-	-- with actual color hex or rgb value
-	if theme then
-		for k, v in ipairs(color) do
-			d = d:gsub("modspotify_" .. v.var, v.hex)
-			d = d:gsub("modspotify_rgb_" .. v.var, v.rgb)
+		-- Replace keywords that we prepared when backing up and unzipping
+		-- with actual color hex or rgb value
+		if theme then
+			for k, v in ipairs(color) do
+				d = d:gsub("modspotify_" .. v.var, v.hex)
+				d = d:gsub("modspotify_rgb_" .. v.var, v.rgb)
+			end
 		end
-	end
 
-	if hideAds then
-		d = table.concat({d,
-			"#hpto-container {\ndisplay: none !important}\n",
-			"#concerts {\ndisplay: none !important}\n",
-			".sponsored-credits {\ndisplay: none !important}\n",
-			".billboard-ad {\ndisplay: none !important}\n",
-			"#leaderboard-ad-wrapper {\ndisplay: none !important}\n"
-		})
+		if hideAds then
+			d = table.concat({d,
+				"#hpto-container {\ndisplay: none !important}\n",
+				"#concerts {\ndisplay: none !important}\n",
+				".sponsored-credits {\ndisplay: none !important}\n",
+				".billboard-ad {\ndisplay: none !important}\n",
+				"#leaderboard-ad-wrapper {\ndisplay: none !important}\n"
+			})
+		end
+
+		if injectCSS then
+			d = table.concat({d, customCSS})
+		end
+
+		if not glue and n2:match("glue%.css$") then
+			glue = d
+		end
 	end
 
 	f = io.open(n2, 'w')
@@ -381,7 +410,6 @@ function ModCSS()
 
 	ModCSS()
 end
-
 
 function parseColor(raw)
 	local hex = ''
