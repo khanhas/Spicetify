@@ -5,13 +5,15 @@
 }
 
 /*Hide some annoying elements like profile name and pic, upgrade button and device connect bar at bottom, new playlist button*/
-.profile-menu-wrapper .profile, .upgrade-button, .view-player .remote-playback-bar, .NewPlaylistButton {
+.profile-menu-wrapper .profile,
+.upgrade-button,
+.view-player .remote-playback-bar,
+.NewPlaylistButton {
 	display: none !important;
 }
 
 /*Make top bar a draggable zone to change window position*/
 .zlink-app-header {
-	dispaly: block !important;
 	height: 70px !important;
 	padding-top: 20px !important;
 	-webkit-app-region: drag !important;
@@ -82,9 +84,13 @@ body.remotebar .view-player .player-bar-wrapper {
 	transform: translateY(-10px);
 }
 
+.card-placeholder-wrapper {
+	background: transparent !important;
+}
+
 /*Spice up search input background*/
 .SearchInput__input {
-	background-color: rgba(modspotify_rgb_selected_row_bg, 0.5) !important;
+	background-color: rgba(modspotify_rgb_scrollbar_fg_and_selected_row_bg, 0.5) !important;
 }
 
 /*Fixed player bar height and add cool shadow under*/
@@ -96,7 +102,6 @@ body.remotebar .view-player .player-bar-wrapper {
 /*
 Make cover image in player bar bigger and change position it abit
 Also padding tilte and artist to correct position
-FIXME: text is unclickable
 */
 .view-player .now-playing,
 .view-player .now-playing-container,
@@ -125,6 +130,10 @@ FIXME: text is unclickable
 	padding-left: 70px !important;
 }
 
+.view-player .now-playing-container {
+	z-index: 9999 !important;
+}
+
 /*
 Minimize left sidebar
 Expand when hovering on windows's left edge
@@ -133,8 +142,6 @@ Expand when hovering on windows's left edge
 	/*Widen the hover zone here*/
 	min-width: 5px !important;
 	width: 5px !important;
-	/**/
-	background-color: transparent !important;
 	transition-property: width !important;
 	transition-duration: .5s !important;
 	transition-timing-function: cubic-bezier(.3,0,0,1) !important;
@@ -143,6 +150,10 @@ Expand when hovering on windows's left edge
 /*Expanded sidebar width*/
 .sidebar:hover {
 	width: 200px !important;
+}
+
+.sidebar .sidebar-navbar.sidebar-scroll-element {
+	padding-top: 30px !important;
 }
 
 .sidebar:hover .sidebar-navbar.sidebar-scroll-element {
@@ -174,12 +185,13 @@ Expand when hovering on windows's left edge
 	width:50px !important;
 	overflow: visible !important;
 	box-shadow: 0 5px 15px rgba(0,0,0,0.7) !important;
+	transition:none 0.3s cubic-bezier(.3,0,.7,1);
 }
 
 .view-player .player-controls-container .controls .button-play:before{
 	font-size:18px !important;
 	padding-left: 16px !important;
-	padding-top: 10px !important;
+	padding-top: 9px !important;
 }
 
 
@@ -187,6 +199,7 @@ Expand when hovering on windows's left edge
 	position: absolute !important;
 	width: 100% !important;
 }
+
 .view-player .player-controls-container .controls {
 	width: 100% !important;
 	height: 100%  !important;
@@ -255,7 +268,7 @@ Collage of 3 album covers is usually seen in Browse and Chart.
 
 .card-puff__title {
 	padding: 5px 10px 5px 10px !important;
-	background-color: rgba(modspotify_rgb_cover_overlay,0.8) !important;
+	background-color: rgba(modspotify_rgb_cover_overlay_and_shadow,0.8) !important;
 	border-radius: 5px;
 }
 /*
@@ -298,8 +311,8 @@ meaningless followers number
 	display: none !important;
 }
 
-.card-info-wrapper {
-  height: 30px !important;
+.carousel .card-info-wrapper {
+	height: 30px !important;
 }
 
 /*
@@ -308,11 +321,23 @@ and they has .carousel as a wrapper and it hides anything that
 overflows from its zone, aka our shadow and lifting animation.
 */
 .carousel {
-  overflow: visible !important;
+	overflow: visible !important;
 }
 
 /*
+Button with text Play
 */
 .button.button-green {
-	color: #modspotify_secondary_fg !important;
+	color: #modspotify_main_bg !important;
+}
+
+/*
+Change text color in playlist
+*/
+.tl-explicit .label,
+.tl-premium .label,
+.tl-cell:not(.tl-number),
+.tl-cell a:link,
+.tl-highlight {
+  color: #modspotify_secondary_fg;
 }
