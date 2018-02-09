@@ -154,6 +154,7 @@ Expand when hovering on windows's left edge
 
 .sidebar .sidebar-navbar.sidebar-scroll-element {
 	padding-top: 30px !important;
+	padding-bottom: 100px !important;
 }
 
 .sidebar:hover .sidebar-navbar.sidebar-scroll-element {
