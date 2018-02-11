@@ -11,9 +11,15 @@
 
 **Note:** Only normal Spotify version is supported. Windows Store version is under a write permission required folder so I can't make it to work. Normal Spotify installer can be found in @Resource folder.  
 
-![Demo1](https://i.imgur.com/pXR5Pkb.png)
+![Demo1](https://i.imgur.com/H5hIqh8.png)
 
 ![Demo2](https://i.imgur.com/m3FjX6n.png)
+
+## Themes
+Theme picker is added in v1.2. If you have multiple themes in Themes folder, click at back and next buttons to rotate through all of them. You also can create new theme and duplicate current theme instantly by using right mouse context menu.
+
+![Demo3](https://i.imgur.com/EVxeS2u.png)
+
 
 ## How it works
 Spotify UI is HTML/CSS and runs inside Chromium Embedded Framework<sup>[[1]](https://www.quora.com/How-is-JavaScript-used-within-the-Spotify-desktop-application-Is-it-packaged-up-and-run-locally-only-retrieving-the-assets-as-and-when-needed-What-JavaScript-VM-is-used)</sup>. All CSS files controlling element attributes and interaction are packed in SPA files (they basically are ZIP).  
