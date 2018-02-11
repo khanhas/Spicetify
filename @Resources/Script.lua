@@ -89,7 +89,7 @@ function Initialize()
 		color[k].hex = parseColor(SKIN:GetVariable(v.var))
 		color[k].rgb = hexToRGB(color[k].hex)
 		SKIN:Bang('!SetOption', 'Box' .. meter, 'Color', 'Fill Color ' .. color[k].hex)
-		SKIN:Bang('!SetOption', 'Box' .. meter, 'LeftMouseUpAction', table.concat({'["#@#RainRGB4.exe" "VarName=', v.var, '" "FileName=#ROOTCONFIGPATH##CURRENTFILE#" "RefreshConfig=#CURRENTCONFIG#"]'}))
+		SKIN:Bang('!SetOption', 'Box' .. meter, 'LeftMouseUpAction', table.concat({'["#@#RainRGB4.exe" "VarName=', v.var, '" "FileName=#ROOTCONFIGPATH#Themes\\#CurrentTheme#\\color.inc\\" "RefreshConfig=#CURRENTCONFIG#"]'}))
 
 		local t = 'Text' .. meter
 		local tM = SKIN:GetMeter(t)
@@ -104,6 +104,7 @@ function Initialize()
 		meter = meter + 1
 	end
 
+	currentTheme = SKIN:GetVariable("CurrentTheme")
 	hideAds = SKIN:GetVariable("Hide_Ads") == '1'
 	injectCSS = SKIN:GetVariable("Inject_CSS") == '1'
 	theme = SKIN:GetVariable("Replace_Colors") == '1'
@@ -306,7 +307,7 @@ function StartMod()
 	SKIN:Bang('!SetOption', 'CSSFileView', 'FinishAction', '[!CommandMeasure Script "ModCSS()"]')
 	SKIN:Bang('!UpdateMeasure', 'CSSFileView')
 	if injectCSS then
-		local userCSS = io.open(SKIN:ReplaceVariables("#@#user.css"),'r')
+		local userCSS = io.open(SKIN:ReplaceVariables("#ROOTCONFIGPATH#Themes\\#CurrentTheme#\\user.css"),'r')
 		if userCSS then
 			customCSS = userCSS:read('*a')
 			userCSS:close()
@@ -416,7 +417,7 @@ function parseColor(raw)
 	--RRR,GGG,BBB
 	if raw:find(',') then
 		for c in raw:gmatch('%d+') do
-			string.format("%x", c)
+			c = string.format("%x", c)
 			hex = hex .. c
 		end
 	else
@@ -443,4 +444,115 @@ function hexToRGB(hex)
 		table.insert(rgb, tonumber(h, 16))
 	end
 	return table.concat(rgb, ',')
+end
+
+function NameToIndex(nameTable, name)
+	for i = 1, #nameTable do
+		if name == nameTable[i] then
+			return i
+		end
+	end
+	return nil
+end
+
+themeTable = {}
+function UpdateTheme()
+	local themeCount = SKIN:GetMeasure("ThemeFolderCount"):GetValue()
+	if (themeCount == 0) then
+		print('No theme found in Themes folder.')
+		return
+	end
+	themeName = SKIN:GetMeasure("ThemeFolderName")
+
+	for i = 1, themeCount do
+		SKIN:Bang('!SetOption', 'ThemeFolderName', 'Index', i)
+		SKIN:Bang('!UpdateMeasure', 'ThemeFolderName')
+		table.insert(themeTable, themeName:GetStringValue())
+	end
+
+	currentThemeIndex = NameToIndex(themeTable, currentTheme)
+
+	if not currentThemeIndex then
+		--Fallback to first theme if cannot find current theme name in Themes folder.
+		SKIN:Bang('!WriteKeyValue', 'Variables', 'CurrentTheme', themeTable[1])
+		SKIN:Bang('!Refresh')
+		return
+	end
+
+	if currentThemeIndex > 1 then
+		SKIN:Bang('!ShowMeter', 'ThemeBack')
+		SKIN:Bang('!HideMeter', 'ThemeBack_Disabled')
+	end
+
+	if (themeCount - currentThemeIndex) > 0 then
+		SKIN:Bang('!ShowMeter', 'ThemeNext')
+		SKIN:Bang('!HideMeter', 'ThemeNext_Disabled')
+	end
+end
+
+function ThemeChange(dir)
+	currentThemeIndex = currentThemeIndex + dir
+	SKIN:Bang('!SetOption', 'ThemeFolderName', 'Index', currentThemeIndex)
+	SKIN:Bang('!UpdateMeasure', 'ThemeFolderName')
+	SKIN:Bang('!WriteKeyValue', 'Variables', 'CurrentTheme', themeName:GetStringValue())
+	SKIN:Bang('!Refresh')
+end
+
+function ThemeNew()
+	local name = "New_Theme"
+	local n = 1
+	while NameToIndex(themeTable, name) do
+		n = n + 1
+		name = "New_Theme_" .. n
+	end
+	newThemeFolder = SKIN:ReplaceVariables('#ROOTCONFIGPATH#Themes\\' .. name)
+	SKIN:Bang('!WriteKeyValue', 'Variables', 'CurrentTheme', name)
+	SKIN:Bang('!SetOption', 'ThemeRunCommand', 'Parameter', 'mkdir "' .. newThemeFolder .. '"')
+	SKIN:Bang('!SetOption', 'ThemeRunCommand', 'FinishAction', '!CommandMeasure Script "ThemeNewContent()"')
+	SKIN:Bang('!UpdateMeasure', 'ThemeRunCommand')
+	SKIN:Bang('!CommandMeasure', 'ThemeRunCommand', 'Run')
+end
+
+function ThemeNewContent()
+	local file = io.open(newThemeFolder .. '\\color.inc', 'w+')
+	file:write(
+		'[Variables]\n',
+		'Main_FG = 8a4fff\n',
+		'Secondary_FG = 8a4fff\n',
+		'Main_BG = 8a4fff\n',
+		'Sidebar_And_Player_BG = 8a4fff\n',
+		'Cover_Overlay_And_Shadow = 8a4fff\n',
+		'Indicator_FG_And_Button_BG = 8a4fff\n',
+		'Pressing_FG = 8a4fff\n',
+		'Slider_BG = 8a4fff\n',
+		'Sidebar_Indicator_And_Hover_Button_BG = 8a4fff\n',
+		'Scrollbar_FG_And_Selected_Row_BG = 8a4fff\n',
+		'Pressing_Button_FG = 8a4fff\n',
+		'Pressing_Button_BG = 8a4fff\n',
+		'Selected_Button = 8a4fff\n',
+		'Miscellaneous_BG = 8a4fff\n',
+		'Miscellaneous_Hover_BG = 8a4fff\n',
+		'Preserve_1 = 8a4fff'
+	)
+	file:close()
+
+	file = io.open(newThemeFolder .. '\\user.css', 'w+')
+	file:write()
+	file:close()
+	SKIN:Bang('!Refresh')
+end
+
+function ThemeDuplicate()
+	local name = currentTheme .. '_2'
+	local n = 2
+	while NameToIndex(themeTable, name) do
+		n = n + 1
+		name = currentTheme .. '_' .. n
+	end
+	SKIN:Bang('!SetOption', 'ThemeRunCommand', 'Parameter', table.concat(
+		{'robocopy "', currentTheme, '" "', name, '"'}
+	))
+	SKIN:Bang('!SetOption', 'ThemeRunCommand', 'FinishAction', '[!WriteKeyValue Variables CurrentTheme "' .. name .. '"][!Refresh]')
+	SKIN:Bang('!UpdateMeasure', 'ThemeRunCommand')
+	SKIN:Bang('!CommandMeasure', 'ThemeRunCommand', 'Run')
 end
