@@ -81,12 +81,48 @@ color = {
 	}
 }
 
+colorIncTemplate = table.concat({
+					'[Variables]',
+					'Main_FG = 8a4fff',
+					'Secondary_FG = 8a4fff',
+					'Main_BG = 8a4fff',
+					'Sidebar_And_Player_BG = 8a4fff',
+					'Cover_Overlay_And_Shadow = 8a4fff',
+					'Indicator_FG_And_Button_BG = 8a4fff',
+					'Pressing_FG = 8a4fff',
+					'Slider_BG = 8a4fff',
+					'Sidebar_Indicator_And_Hover_Button_BG = 8a4fff',
+					'Scrollbar_FG_And_Selected_Row_BG = 8a4fff',
+					'Pressing_Button_FG = 8a4fff',
+					'Pressing_Button_BG = 8a4fff',
+					'Selected_Button = 8a4fff',
+					'Miscellaneous_BG = 8a4fff',
+					'Miscellaneous_Hover_BG = 8a4fff',
+					'Preserve_1 = 8a4fff'
+				}, '\n')
 
 function Initialize()
 	-- Parsing color from skin variables
 	local meter = 1
 	for k, v in ipairs(color) do
-		color[k].hex = parseColor(SKIN:GetVariable(v.var))
+		local rawColor = SKIN:GetVariable(v.var)
+		if (not rawColor or rawColor == '') then
+			local colorFilePath = SKIN:ReplaceVariables("#ROOTCONFIGPATH#Themes\\#CurrentTheme#\\color.inc")
+			local file = io.open(colorFilePath, 'r')
+			if (file) then
+				file:close()
+				SKIN:Bang('!WriteKeyValue', 'Variables', v.var, '8a4fff', colorFilePath)
+				SKIN:Bang('!SetVariable', v.var, '8a4fff')
+				rawColor = '8a4fff'
+			else
+				file = io.open(colorFilePath, 'w+')
+				file:write(colorIncTemplate)
+				file:close()
+				SKIN:Bang('!Refresh')
+				return
+			end
+		end
+		color[k].hex = parseColor(rawColor)
 		color[k].rgb = hexToRGB(color[k].hex)
 		SKIN:Bang('!SetOption', 'Box' .. meter, 'Color', 'Fill Color ' .. color[k].hex)
 		SKIN:Bang('!SetOption', 'Box' .. meter, 'LeftMouseUpAction', table.concat({'["#@#RainRGB4.exe" "VarName=', v.var, '" "FileName=#ROOTCONFIGPATH#Themes\\#CurrentTheme#\\color.inc\\" "RefreshConfig=#CURRENTCONFIG#"]'}))
@@ -108,33 +144,65 @@ function Initialize()
 	hideAds = SKIN:GetVariable("Hide_Ads") == '1'
 	injectCSS = SKIN:GetVariable("Inject_CSS") == '1'
 	theme = SKIN:GetVariable("Replace_Colors") == '1'
+	devTool = SKIN:GetVariable("DevTool") == '1'
+	wnpComp = SKIN:GetVariable("WebNowPlaying_Compatible") == '1'
 
-	fileCount = SKIN:GetMeasure("FileCount")
-	fileName = SKIN:GetMeasure("FileName")
+	backupCount = SKIN:GetMeasure("BackupFileCount")
+	backupName = SKIN:GetMeasure("BackupFileName")
+	spotifyCount = SKIN:GetMeasure("SpotifyFileCount")
+
 	cssName = SKIN:GetMeasure("CSSFileName")
+	jsName = SKIN:GetMeasure("JSFileName")
+	htmlName = SKIN:GetMeasure("HTMlFileName")
 	status = 'Please wait'
 	nC = 0
 	curSpa = 0
+	userCSSFile = SKIN:ReplaceVariables('#ROOTCONFIGPATH#Themes\\#CurrentTheme#\\user.css')
+	local tryToReadCSS = io.open(userCSSFile, 'r')
+	if (not tryToReadCSS) then
+		tryToReadCSS:close()
+		local f = io.open(userCSSFile, 'w+')
+		f:write('')
+		f:close()
+	end
 end
 
+liveUpdate = false
+initLive = true
+liveUserCSS = ''
+oldLiveUserCSS = ''
 function Update()
+	if (liveUpdate and totalSpa) then
+		local f = io.open(userCSSFile, 'r')
+		liveUserCSS = f:read('*a')
+		f:close()
+		if (initLive) then
+			oldLiveUserCSS = liveUserCSS
+			initLive = false
+		end
+		if (oldLiveUserCSS ~= liveUserCSS) then
+			if (not isModding) then
+				StartMod()
+				oldLiveUserCSS = liveUserCSS
+			end
+		end
+	end
+	liveUpdate = SKIN:GetVariable("LiveUpdate") == '1'
 	return status
 end
 
--- Get total SPA files count
-function UpdateFileCount()
-	SKIN:Bang('!UpdateMeasure', 'FileCount')
-	totalSpa = fileCount:GetValue()
-end
-
 function UpdateInitStatus()
-	UpdateFileCount()
-	if totalSpa == 0 then
+	totalSpa = backupCount:GetValue()
+	if (totalSpa == 0) then
 		SKIN:Bang('!HideMeterGroup', 'ApplyButton')
 		SKIN:Bang('!ShowMeterGroup', 'ApplyButton_Disabled')
 		SKIN:Bang('!HideMeterGroup', 'BackupButton_Disabled')
-		SKIN:Bang('!ShowMeterGroup', 'BackupButton')
-		status = 'Please backup first'
+		if (UpdateSpotifyFolderStatus()) then
+			status = 'Something is wrong. Please reinstall Spotify before backup.'
+		else
+			SKIN:Bang('!ShowMeterGroup', 'BackupButton')
+			status = 'Please backup first'
+		end
 	else
 		SKIN:Bang('!HideMeterGroup', 'ApplyButton_Disabled')
 		SKIN:Bang('!ShowMeterGroup', 'ApplyButton')
@@ -142,6 +210,11 @@ function UpdateInitStatus()
 		SKIN:Bang('!ShowMeterGroup', 'BackupButton_Disabled')
 		status = 'Ready'
 	end
+end
+
+function UpdateSpotifyFolderStatus()
+	SKIN:Bang('!UpdateMeasure', 'SpotifyFileCount')
+	return spotifyCount:GetValue() == 0
 end
 
 -- For progress bar
@@ -155,39 +228,47 @@ end
 
 function Init_Unzip()
 	bC = 0
-	SKIN:Bang('!SetOption', 'FileView', 'FinishAction', '!CommandMeasure Script "UpdateFileCount();Unzip()"')
-	SKIN:Bang('!UpdateMeasure', 'FileView')
-	SKIN:Bang('!CommandMeasure', 'FileView', 'Update')
+	SKIN:Bang('!SetOption', 'BackupFileCount', 'FinishAction', '[!UpdateMeasure BackupFileCount][!CommandMeasure Script "totalSpa=backupCount:GetValue();Unzip()"]')
+	SKIN:Bang('!UpdateMeasure', 'BackupFileCount')
+	SKIN:Bang('!CommandMeasure', 'BackupFileCount', 'Update')
 end
 
 function Unzip()
 	bC = bC + 1
-	if bC > totalSpa then
-		glue = nil
-		SKIN:Bang('!Refresh')
+
+	SKIN:Bang('!SetOption', 'BackupFileName', 'Index', bC)
+	SKIN:Bang('!UpdateMeasure', 'BackupFileName')
+	n = backupName:GetStringValue()
+	if not n or n == '' then
+		Duplicate()
 		return
 	end
-	SKIN:Bang('!SetOption', 'FileName', 'Index', bC)
-	SKIN:Bang('!UpdateMeasure', 'FileName')
-	n = fileName:GetStringValue()
-	nX = n:gsub('%.','_')
+	nX = n:gsub('%.spa','')
 	status = "Unzipping " .. n
 	curSpa = bC
+	UpdatePercent()
 
-	SKIN:Bang('!SetOption', 'Unzip', 'Parameter', 'e "Backup\\' .. n .. '" -oExtracted\\' .. nX .. '\\raw *.css -r')
+	if (nX == "settings") then
+		SKIN:Bang('!SetOption', 'Unzip', 'Parameter', 'x "Backup\\' .. n .. '" -oExtracted\\Raw\\' .. nX .. '\\ -r')
+	else
+		SKIN:Bang('!SetOption', 'Unzip', 'Parameter', 'x "Backup\\' .. n .. '" -oExtracted\\Raw\\' .. nX .. '\\ -r')
+	end
 	SKIN:Bang('!UpdateMeasure', 'Unzip')
 	SKIN:Bang('!CommandMeasure', 'Unzip', 'Run')
 end
 
-function DuplicateExtracted()
-	SKIN:Bang('!SetOption', 'Duplicate', 'Parameter', '"robocopy ' .. nX .. '\\raw ' .. nX .. '\\themed"')
+function Duplicate()
+	SKIN:Bang('!SetOption', 'Duplicate', 'Parameter', 'robocopy "Raw" "Themed" /E')
 	SKIN:Bang('!UpdateMeasure', 'Duplicate')
 	SKIN:Bang('!CommandMeasure', 'Duplicate', 'Run')
+	status = "Copying @Resource\\Raw to @Resource\\Themed"
 end
 
 function Init_PrepareCSS()
 	pC = 1
-	SKIN:Bang('!SetOption', 'CSSFileView', 'Path', '#@#Extracted\\'.. nX .. '\\themed')
+	glue = nil
+	status = "Preparing CSS files - Skin might be irresponsive, don't freak out."
+	SKIN:Bang('!SetOption', 'CSSFileView', 'Path', '#@#Extracted\\Themed')
 	SKIN:Bang('!SetOption', 'CSSFileView', 'FinishAction', '[!CommandMeasure Script "PrepareCSS()"]')
 	SKIN:Bang('!UpdateMeasure', 'CSSFileView')
 	SKIN:Bang('!CommandMeasure', 'CSSFileView', 'Update')
@@ -198,7 +279,7 @@ function PrepareCSS()
 	SKIN:Bang('!UpdateMeasure', 'CSSFileName')
 	local nP = cssName:GetStringValue()
 	if not nP or nP == '' then
-		Unzip()
+		SKIN:Bang('!Refresh')
 		return
 	end
 
@@ -302,15 +383,11 @@ function PrepareCSS()
 end
 
 function StartMod()
-	nC = 0
-	SKIN:Bang('!SetOption', 'CSSFileView', 'Path', '#@#Decomp\\css')
-	SKIN:Bang('!SetOption', 'CSSFileView', 'FinishAction', '[!CommandMeasure Script "ModCSS()"]')
-	SKIN:Bang('!UpdateMeasure', 'CSSFileView')
+	isModding = true
 	if injectCSS then
 		local userCSS = io.open(SKIN:ReplaceVariables("#ROOTCONFIGPATH#Themes\\#CurrentTheme#\\user.css"),'r')
 		if userCSS then
 			customCSS = userCSS:read('*a')
-			userCSS:close()
 			for k, v in ipairs(color) do
 				customCSS = customCSS:gsub("modspotify_" .. v.var, v.hex)
 				customCSS = customCSS:gsub("modspotify_rgb_" .. v.var, v.rgb)
@@ -319,50 +396,56 @@ function StartMod()
 			customCSS = ''
 			print('user.css is not found in @Resource folder. Please make one.')
 		end
+		userCSS:close()
 	end
-	ModSpa()
+	status = "Removing @Resource\\Decomp"
+	SKIN:Bang('!CommandMeasure', 'Remove', 'Run')
 end
 
-function ModSpa()
-	nC = nC + 1
-	if nC > totalSpa then
-		glue = nil
-		status = "Mod succeeded"
-		SKIN:Bang('"#@#AutoRestart.exe"')
-		return
-	end
-	SKIN:Bang('!SetOption', 'FileName', 'Index', nC)
-	SKIN:Bang('!UpdateMeasure', 'FileName')
-	n = fileName:GetStringValue()
-	status = 'Updating '.. n
-	curSpa = nC
-	if theme then
-		SKIN:Bang('!SetOption', 'Replicate', 'Parameter', 'robocopy "Extracted\\' .. n:gsub('%.', '_') .. '\\themed" "Decomp\\css"')
+function CheckSpotifyFolder()
+	SKIN:Bang('!SetOption', 'SpotifyFileCount', 'FinishAction', '!CommandMeasure Script "DoesSpotifyNeedDelete()"')
+	SKIN:Bang('!UpdateMeasure', 'SpotifyFileCount')
+	SKIN:Bang('!CommandMeasure', 'SpotifyFileCount', 'Update')
+end
+
+function DoesSpotifyNeedDelete()
+	if (not UpdateSpotifyFolderStatus()) then
+		status = "Removing Spotify\\Apps"
+		SKIN:Bang('!CommandMeasure', 'Remove2', 'Run')
 	else
-		SKIN:Bang('!SetOption', 'Replicate', 'Parameter', 'robocopy "Extracted\\' .. n:gsub('%.', '_') .. '\\raw" "Decomp\\css"')
+		Replicate()
+	end
+end
+
+function Replicate()
+	if theme then
+		status = "Copying Extracted\\Themed to Decomp"
+		SKIN:Bang('!SetOption', 'Replicate', 'Parameter', 'robocopy "Extracted\\Themed" "Decomp" *.css /S')
+	else
+		status = "Copying Extracted\\Raw to Decomp"
+		SKIN:Bang('!SetOption', 'Replicate', 'Parameter', 'robocopy "Extracted\\Raw" "Decomp" *.css /S')
 	end
 	SKIN:Bang('!UpdateMeasure', 'Replicate')
 	SKIN:Bang('!CommandMeasure', 'Replicate', 'Run')
 end
 
-function Zip()
-	SKIN:Bang('!SetOption', 'Zip', 'Parameter', 'u -bb0 -mx0 "%appdata%\\Spotify\\Apps\\' .. n .. '" "*.css" -r')
-	SKIN:Bang('!UpdateMeasure', 'Zip')
-	SKIN:Bang('!CommandMeasure', 'Zip', 'Run')
-end
-
 function StartCSS()
 	c2 = 1
+	glue = nil
+	SKIN:Bang('!SetOption', 'CSSFileView', 'Path', '#@#Decomp')
+	SKIN:Bang('!SetOption', 'CSSFileView', 'FinishAction', '!CommandMeasure Script "ModCSS()"')
+	SKIN:Bang('!UpdateMeasure', 'CSSFileView')
 	SKIN:Bang('!CommandMeasure', 'CSSFileView', 'Update')
 end
-
 
 function ModCSS()
 	SKIN:Bang('!SetOption', 'CSSFileName', 'Index', c2)
 	SKIN:Bang('!UpdateMeasure', 'CSSFileName')
 	n2 = cssName:GetStringValue()
 	if not n2 or n2 == '' then
-		Zip()
+		glue = nil
+		status = 'Transfering mod to Spotify'
+		SKIN:Bang('!CommandMeasure', 'TransferMod', 'Run')
 		return
 	end
 
@@ -402,7 +485,6 @@ function ModCSS()
 			glue = d
 		end
 	end
-
 	f = io.open(n2, 'w')
 	f:write(d)
 	f:close()
@@ -515,25 +597,7 @@ end
 
 function ThemeNewContent()
 	local file = io.open(newThemeFolder .. '\\color.inc', 'w+')
-	file:write(
-		'[Variables]\n',
-		'Main_FG = 8a4fff\n',
-		'Secondary_FG = 8a4fff\n',
-		'Main_BG = 8a4fff\n',
-		'Sidebar_And_Player_BG = 8a4fff\n',
-		'Cover_Overlay_And_Shadow = 8a4fff\n',
-		'Indicator_FG_And_Button_BG = 8a4fff\n',
-		'Pressing_FG = 8a4fff\n',
-		'Slider_BG = 8a4fff\n',
-		'Sidebar_Indicator_And_Hover_Button_BG = 8a4fff\n',
-		'Scrollbar_FG_And_Selected_Row_BG = 8a4fff\n',
-		'Pressing_Button_FG = 8a4fff\n',
-		'Pressing_Button_BG = 8a4fff\n',
-		'Selected_Button = 8a4fff\n',
-		'Miscellaneous_BG = 8a4fff\n',
-		'Miscellaneous_Hover_BG = 8a4fff\n',
-		'Preserve_1 = 8a4fff'
-	)
+	file:write(colorIncTemplate)
 	file:close()
 
 	file = io.open(newThemeFolder .. '\\user.css', 'w+')
@@ -555,4 +619,59 @@ function ThemeDuplicate()
 	SKIN:Bang('!SetOption', 'ThemeRunCommand', 'FinishAction', '[!WriteKeyValue Variables CurrentTheme "' .. name .. '"][!Refresh]')
 	SKIN:Bang('!UpdateMeasure', 'ThemeRunCommand')
 	SKIN:Bang('!CommandMeasure', 'ThemeRunCommand', 'Run')
+end
+
+--Mod JS file
+function ModJS(packName, jsFile, replaceTable)
+	local jsRaw = SKIN:ReplaceVariables("#@#Extracted\\Raw\\" .. packName .. "\\" .. jsFile .. '.js')
+	local jsSpo = SKIN:ReplaceVariables("%appdata%\\Spotify\\Apps\\" .. packName .. "\\" .. jsFile .. ".js")
+	local f = io.open(jsRaw, 'r')
+	local d = f:read("*a")
+	f:close()
+	for k, v in pairs(replaceTable) do
+		print(k,v)
+		d = d:gsub(k, v)
+	end
+	f = io.open(jsSpo, 'w+')
+	f:write(d)
+	f:close()
+end
+
+--Inject plugins
+function ModHTML(packName, pluginFile)
+	pluginFile = pluginFile .. '.js'
+	local htmlRaw = SKIN:ReplaceVariables("#@#Extracted\\Raw\\" .. packName .. "\\index.html")
+	local htmlSpo = SKIN:ReplaceVariables("%appdata%\\Spotify\\Apps\\" .. packName .. "\\index.html")
+	local f = io.open(htmlRaw, 'r')
+	local d = f:read("*a")
+	f:close()
+	d = d:gsub("(</body>)", '<script type="text/javascript" src="/' .. pluginFile .. '"></script>%1')
+	f = io.open(htmlSpo, 'w')
+	f:write(d)
+	f:close()
+	local plugin = io.open(SKIN:ReplaceVariables("#@#Plugins\\" .. pluginFile), 'r')
+	if (plugin) then
+		local pluginData = plugin:read('*a')
+		plugin:close()
+		plugin = io.open(SKIN:ReplaceVariables("%appdata%\\Spotify\\Apps\\" .. packName .. "\\" .. pluginFile), 'w+')
+		plugin:write(pluginData)
+	end
+	plugin:close()
+end
+
+function Finishing()
+	if (devTool) then
+		ModJS('settings', 'bundle', {
+			["model%.get%('enabled'%)"] = "true",
+			["(const isEmployee = ).-;"] = "%1true;"
+		})
+	end
+
+	if (wnpComp) then
+		ModHTML('zlink', 'wnpPlugin')
+	end
+
+	status = 'Mod succeeded'
+	if (SKIN:GetVariable("AutoRestart")=='1') then SKIN:Bang('["#@#AutoRestart.exe"]') end
+	isModding = false
 end
