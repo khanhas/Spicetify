@@ -11,12 +11,12 @@
 
 **Note:** Only normal Spotify version is supported. Windows Store version is under a write permission required folder so I can't make it to work. Normal Spotify installer can be found in @Resource folder.  
 
-![Demo1](https://i.imgur.com/H5hIqh8.png)
+![Demo1](https://i.imgur.com/VN8oaHO.png)
 
 ![Demo2](https://i.imgur.com/m3FjX6n.png)
 
 ## Themes
-Theme picker is added in v1.2. If you have multiple themes in Themes folder, click at back and next buttons to rotate through all of them. You also can create new theme and duplicate current theme instantly by using right mouse context menu.
+If you have multiple themes in Themes folder, click at back and next buttons to rotate through all of them. You also can create new theme and duplicate current theme instantly by using right mouse context menu.
 
 ![Demo3](https://i.imgur.com/EVxeS2u.png)
 
@@ -28,12 +28,12 @@ These CSS files are extracted first then go through a preparation process that f
 
 When user applies his/her own colors scheme, all keywords are replaced with actual colors value, both in hex and RRR,GGG,BBB format. 
 
-After that, modded CSS files are updated directly to Spotify's SPA package.
+After that, modded CSS and remaining files are transferred back to Spotify directory.
 
 ## Advanced customization
 To sastify any web developer that has experience with CSS, **Inject CSS** option will allow you to customize your Spotify client even more. 
 
-Choose **Edit CSS** button to open up user.css file. Find element class name and id in CSS files in @Resources\Extracted folder. 
+Choose **Edit CSS** button to open up user.css file. Find element class name and id in CSS files in @Resources\Extracted folder or enable Developer mode to be able to use DevTool and Inspect Element. 
 
 You can use my internal keywords for colors instead of hard coding color value into CSS, so you can publish your Spotify theme and keep it customizable. Remember, hex value has to start with `#` and doesn't have alpha value. 
  
