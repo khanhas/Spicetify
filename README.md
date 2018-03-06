@@ -94,3 +94,4 @@ This will change search input background color to the same color as progress sli
 
 ## Credit
 Thanks ![**actionless**](https://github.com/actionless) for his ![oomoxify](https://github.com/actionless/oomoxify/blob/master/oomoxify.sh) script that this skin is based on.
+Thanks ![**tjhrulz**](https://github.com/tjhrulz) for his ![WebNowPlaying Browser Extension](https://github.com/tjhrulz/WebNowPlaying-BrowserExtension).
