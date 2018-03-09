@@ -4,6 +4,7 @@ var currAlbum;
 var currCover;
 var currPos;
 var currDur;
+var currDurMiliSec;
 var currVolume;
 var currRating;
 var currRepeat;
@@ -246,22 +247,20 @@ function updateInfo()
 		//UPDATE DURATION
 		try
 		{
-			if (musicInfo.durationString !== null)
-			{
+			if (musicInfo.durationString !== null) {
 				temp = musicInfo.durationString();
-				if (currDur !== temp && temp !== null)
-				{
+				if (currDur !== temp && temp !== null) {
 					ws.send("DURATION:" + temp);
 					currDur = temp;
-				}
-			}
-			else if (musicInfo.duration !== null)
-			{
-				temp = musicInfo.duration();
-				if (currDur !== temp && temp !== null && !isNaN(temp))
-				{
-					ws.send("DURATION:" + convertTimeToString(temp));
-					currDur = temp;
+					//Convert duration string to milisecond 
+					var time = [];
+					while (true) {
+						var n = temp.lastIndexOf(":");
+						time.push(parseInt(temp.substr(n + 1)));
+						temp = temp.replace(new RegExp(temp.substr(n) + "$"), "")
+						if (n == -1) break;
+					}
+					currDurMiliSec = (time[0] + (time[1] ? time[1] * 60 : 0) + (time[2] ? time[2] * 60 * 60 : 0)) * 1000;
 				}
 			}
 		}
@@ -279,15 +278,6 @@ function updateInfo()
 				if (currPos !== temp && temp !== null)
 				{
 					ws.send("POSITION:" + temp);
-					currPos = temp;
-				}
-			}
-			else if (musicInfo.position !== null)
-			{
-				temp = musicInfo.position();
-				if (currPos !== temp && temp !== null && !isNaN(temp))
-				{
-					ws.send("POSITION:" + convertTimeToString(temp));
 					currPos = temp;
 				}
 			}
@@ -590,6 +580,7 @@ function init()
 		currCover = null;
 		currPos = null;
 		currDur = null;
+		currDurMiliSec = null;
 		currVolume = null;
 		currRating = null;
 		currRepeat = null;
@@ -728,39 +719,26 @@ function setup()
 	};
 	spotifyEventHandler.progress = function(progress)
 	{
-		var loc = document.getElementsByClassName("playback-bar")[0].children[1].getBoundingClientRect();
-		progress *= loc.width;
+		//Trigger PlayerUI.prototype.setUpSpicetify function
+		if (!chrome.globalSeek)
+		{
+			document.getElementById("spicetify-inject").click()
+		}
 
-		var a = document.getElementsByClassName("playback-bar")[0].children[1];
-		var e = document.createEvent('MouseEvents');
-		e.initMouseEvent('mousedown', true, true, window, 1,
-			screenX + loc.left + progress, screenY + loc.top + loc.height / 2,
-			loc.left + progress, loc.top + loc.height / 2,
-			false, false, false, false, 0, null);
-		a.dispatchEvent(e);
-		e.initMouseEvent('mouseup', true, true, window, 1,
-			screenX + loc.left + progress, screenY + loc.top + loc.height / 2,
-			loc.left + progress, loc.top + loc.height / 2,
-			false, false, false, false, 0, null);
-		a.dispatchEvent(e);
+		if (currDurMiliSec !== null) 
+		{
+			chrome.globalSeek(Math.round(currDurMiliSec * progress));
+		}
 	};
 	spotifyEventHandler.volume = function(volume)
 	{
-		var loc = document.getElementsByClassName("volume-bar")[0].children[1].getBoundingClientRect();
-		volume *= loc.width;
-
-		var a = document.getElementsByClassName("volume-bar")[0].children[1];
-		var e = document.createEvent('MouseEvents');
-		e.initMouseEvent('mousedown', true, true, window, 1,
-			screenX + loc.left + volume, screenY + loc.top + loc.height / 2,
-			loc.left + volume, loc.top + loc.height / 2,
-			false, false, false, false, 0, null);
-		a.dispatchEvent(e);
-		e.initMouseEvent('mouseup', true, true, window, 1,
-			screenX + loc.left + volume, screenY + loc.top + loc.height / 2,
-			loc.left + volume, loc.top + loc.height / 2,
-			false, false, false, false, 0, null);
-		a.dispatchEvent(e);
+		//Trigger PlayerUI.prototype.setUpSpicetify function
+		if (!chrome.globalVolume)
+		{
+			document.getElementById("spicetify-inject").click()
+		}
+		
+		chrome.globalVolume(volume);
 	};
 	spotifyEventHandler.repeat = function()
 	{
