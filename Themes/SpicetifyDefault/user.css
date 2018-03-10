@@ -128,11 +128,17 @@ Also padding tilte and artist to correct position
 }
 
 .view-player .now-playing-container .caption {
-	width: 400px !important;
 	height: 100% !important;
 	align-content: center !important;
 	padding-left: 70px !important;
 }
+
+@media (min-width: 1200px){
+	.view-player .now-playing-container {
+		min-width: 500px;
+	}
+}
+
 
 .view-player .now-playing-container {
 	z-index: 9998 !important;
@@ -165,12 +171,17 @@ Expand when hovering on windows's left edge
 
 .sidebar .sidebar-navbar.sidebar-scroll-element {
 	padding-top: 30px !important;
-	padding-bottom: 100px !important;
+	padding-bottom: 60px !important;
 	background-color: #modspotify_main_bg !important;
 	opacity: 0 !important;
 	transition-property: opacity !important;
 	transition-duration: .5s !important;
 	transition-timing-function: cubic-bezier(.3,0,0,1) !important;
+}
+
+/* Playlist content */
+#content {
+	padding-bottom: 60px;
 }
 
 .sidebar:hover .sidebar-navbar.sidebar-scroll-element {
@@ -488,9 +499,20 @@ and add little glowing effect
     width: 10px !important;
 	height: 10px !important;
 }
-
+.now-playing.cover-size-transition.active.image-expanded .caption {
+	padding-left: 0px !important;
+}
 #view-now-playing a.image {
 	overflow: visible !important;
+}
+
+#view-now-playing.expanded {
+	width: 200px;
+	height: 200px;
+}
+
+#now-playing-image-large .cover-image {
+	height: 200px !important;
 }
 
 /* Profile arrow in top left */
@@ -505,4 +527,9 @@ and add little glowing effect
 #tooltip {
 	box-shadow: 0 0 10px rgba(0,0,0,0.5) !important;
 	border-radius: 5px !important;
+}
+
+.lyrics-lines-container, 
+.message-container {
+	color: #modspotify_secondary_fg !important;
 }

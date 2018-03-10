@@ -246,21 +246,10 @@ function updateInfo()
 		//UPDATE DURATION
 		try
 		{
-			if (musicInfo.durationString !== null)
-			{
+			if (musicInfo.durationString !== null) {
 				temp = musicInfo.durationString();
-				if (currDur !== temp && temp !== null)
-				{
+				if (currDur !== temp && temp !== null) {
 					ws.send("DURATION:" + temp);
-					currDur = temp;
-				}
-			}
-			else if (musicInfo.duration !== null)
-			{
-				temp = musicInfo.duration();
-				if (currDur !== temp && temp !== null && !isNaN(temp))
-				{
-					ws.send("DURATION:" + convertTimeToString(temp));
 					currDur = temp;
 				}
 			}
@@ -279,15 +268,6 @@ function updateInfo()
 				if (currPos !== temp && temp !== null)
 				{
 					ws.send("POSITION:" + temp);
-					currPos = temp;
-				}
-			}
-			else if (musicInfo.position !== null)
-			{
-				temp = musicInfo.position();
-				if (currPos !== temp && temp !== null && !isNaN(temp))
-				{
-					ws.send("POSITION:" + convertTimeToString(temp));
 					currPos = temp;
 				}
 			}
@@ -627,7 +607,7 @@ function setup()
 
 	spotifyInfoHandler.player = function()
 	{
-		return "Spotify";
+		return "Spotify Desktop";
 	};
 
 	spotifyInfoHandler.readyCheck = function()
@@ -642,22 +622,33 @@ function setup()
 	};
 	spotifyInfoHandler.title = function()
 	{
-		return document.getElementsByClassName("view-player")[0].getElementsByClassName("track")[0].innerText.replace(/\n/,"");
+		return chrome.songData ? chrome.songData.metadata.title : "N/A";
+	};
+	spotifyInfoHandler.trackID = function()
+	{
+		return chrome.songData ? chrome.songData.uri : "";
 	};
 	spotifyInfoHandler.artist = function()
 	{
 		return document.getElementsByClassName("view-player")[0].getElementsByClassName("artist")[0].innerText.replace(/\n/,"");
 	};
+	spotifyInfoHandler.artistID = function()
+	{
+		return chrome.songData ? chrome.songData.metadata.artist_uri : "";
+	};
 	spotifyInfoHandler.album = function()
 	{
-		return "N/A";
+		return chrome.songData ? chrome.songData.metadata.album_title : "N/A";
+	};
+	spotifyInfoHandler.albumID = function()
+	{
+		return chrome.songData ? chrome.songData.metadata.album_uri : "";
 	};
 	spotifyInfoHandler.cover = function()
 	{
-		var currCover = document.getElementsByClassName("view-player")[0]
-						.getElementsByClassName("cover-image")[0].style.backgroundImage;
-		if (currCover)
-			return "https://i.scdn.co/image/" + currCover.substring(currCover.lastIndexOf(":") + 1, currCover.indexOf(")") - 1)
+		var currCover = chrome.songData? chrome.songData.metadata.image_xlarge_url : "" 
+		if (currCover !== "" && currCover.indexOf("localfile") === -1)
+			return "https://i.scdn.co/image/" + currCover.substring(currCover.lastIndexOf(":") + 1)
 		else
 			return ""
 	};
@@ -728,39 +719,27 @@ function setup()
 	};
 	spotifyEventHandler.progress = function(progress)
 	{
-		var loc = document.getElementsByClassName("playback-bar")[0].children[1].getBoundingClientRect();
-		progress *= loc.width;
+		//Trigger PlayerUI.prototype.setUpSpicetify function
+		if (!chrome.globalSeek)
+		{
+			document.getElementById("spicetify-inject").click()
+		}
 
-		var a = document.getElementsByClassName("playback-bar")[0].children[1];
-		var e = document.createEvent('MouseEvents');
-		e.initMouseEvent('mousedown', true, true, window, 1,
-			screenX + loc.left + progress, screenY + loc.top + loc.height / 2,
-			loc.left + progress, loc.top + loc.height / 2,
-			false, false, false, false, 0, null);
-		a.dispatchEvent(e);
-		e.initMouseEvent('mouseup', true, true, window, 1,
-			screenX + loc.left + progress, screenY + loc.top + loc.height / 2,
-			loc.left + progress, loc.top + loc.height / 2,
-			false, false, false, false, 0, null);
-		a.dispatchEvent(e);
+		var durMili = chrome.songData ? chrome.songData.metadata.duration : 0;
+		if (durMili !== 0)
+		{
+			chrome.globalSeek(Math.round(durMili * progress));
+		}
 	};
 	spotifyEventHandler.volume = function(volume)
 	{
-		var loc = document.getElementsByClassName("volume-bar")[0].children[1].getBoundingClientRect();
-		volume *= loc.width;
-
-		var a = document.getElementsByClassName("volume-bar")[0].children[1];
-		var e = document.createEvent('MouseEvents');
-		e.initMouseEvent('mousedown', true, true, window, 1,
-			screenX + loc.left + volume, screenY + loc.top + loc.height / 2,
-			loc.left + volume, loc.top + loc.height / 2,
-			false, false, false, false, 0, null);
-		a.dispatchEvent(e);
-		e.initMouseEvent('mouseup', true, true, window, 1,
-			screenX + loc.left + volume, screenY + loc.top + loc.height / 2,
-			loc.left + volume, loc.top + loc.height / 2,
-			false, false, false, false, 0, null);
-		a.dispatchEvent(e);
+		//Trigger PlayerUI.prototype.setUpSpicetify function
+		if (!chrome.globalVolume)
+		{
+			document.getElementById("spicetify-inject").click()
+		}
+		
+		chrome.globalVolume(volume);
 	};
 	spotifyEventHandler.repeat = function()
 	{

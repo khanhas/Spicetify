@@ -146,6 +146,7 @@ function Initialize()
 	theme = SKIN:GetVariable("Replace_Colors") == '1'
 	devTool = SKIN:GetVariable("DevTool") == '1'
 	wnpComp = SKIN:GetVariable("WebNowPlaying_Compatible") == '1'
+	lyrics = SKIN:GetVariable("Lyric") == '1'
 
 	backupCount = SKIN:GetMeasure("BackupFileCount")
 	backupName = SKIN:GetMeasure("BackupFileName")
@@ -477,6 +478,18 @@ function ModCSS()
 			})
 		end
 
+		if lyrics then
+			d = table.concat({d,
+				".lyrics-button {\ndisplay: inline-block !important;\nvisibility: visible !important;\n}\n"
+			})
+		end
+
+		if fullscreen then
+			d = table.concat({d,
+				".lyrics-button {\ndisplay: inline-block !important;\nvisibility: visible !important;\n}\n"
+			})
+		end
+
 		if injectCSS then
 			d = table.concat({d, customCSS})
 		end
@@ -622,9 +635,14 @@ function ThemeDuplicate()
 end
 
 --Mod JS file
-function ModJS(packName, jsFile, replaceTable)
-	local jsRaw = SKIN:ReplaceVariables("#@#Extracted\\Raw\\" .. packName .. "\\" .. jsFile .. '.js')
+function ModJS(packName, jsFile, replaceTable, modded)
 	local jsSpo = SKIN:ReplaceVariables("%appdata%\\Spotify\\Apps\\" .. packName .. "\\" .. jsFile .. ".js")
+	local jsRaw = '';
+	if modded then
+		jsRaw = jsSpo
+	else
+		jsRaw = SKIN:ReplaceVariables("#@#Extracted\\Raw\\" .. packName .. "\\" .. jsFile .. '.js')
+	end
 	local f = io.open(jsRaw, 'r')
 	local d = f:read("*a")
 	f:close()
@@ -637,18 +655,29 @@ function ModJS(packName, jsFile, replaceTable)
 	f:close()
 end
 
---Inject plugins
-function ModHTML(packName, pluginFile)
-	pluginFile = pluginFile .. '.js'
-	local htmlRaw = SKIN:ReplaceVariables("#@#Extracted\\Raw\\" .. packName .. "\\index.html")
+--Mod HTML file
+function ModHTML(packName, replaceTable, modded)
 	local htmlSpo = SKIN:ReplaceVariables("%appdata%\\Spotify\\Apps\\" .. packName .. "\\index.html")
+	local htmlRaw = ''
+	if modded then
+		htmlRaw = htmlSpo
+	else
+		htmlRaw = SKIN:ReplaceVariables("#@#Extracted\\Raw\\" .. packName .. "\\index.html")
+	end
 	local f = io.open(htmlRaw, 'r')
 	local d = f:read("*a")
 	f:close()
-	d = d:gsub("(</body>)", '<script type="text/javascript" src="/' .. pluginFile .. '"></script>%1')
-	f = io.open(htmlSpo, 'w')
+	for k, v in pairs(replaceTable) do
+		d = d:gsub(k, v)
+	end
+	f = io.open(htmlSpo, 'w+')
 	f:write(d)
 	f:close()
+end
+
+--Inject plugins
+function ModInjectPlugin(packName, pluginFile)
+	pluginFile = pluginFile .. '.js'
 	local plugin = io.open(SKIN:ReplaceVariables("#@#Plugins\\" .. pluginFile), 'r')
 	if (plugin) then
 		local pluginData = plugin:read('*a')
@@ -660,15 +689,48 @@ function ModHTML(packName, pluginFile)
 end
 
 function Finishing()
+	local htmlModded = {}
+	local jsModded = {}
 	if (devTool) then
 		ModJS('settings', 'bundle', {
 			["model%.get%('enabled'%)"] = "true",
 			["(const isEmployee = ).-;"] = "%1true;"
-		})
+		}, jsModded['settings'])
+		jsModded['settings'] = true
 	end
 
 	if (wnpComp) then
-		ModHTML('zlink', 'wnpPlugin')
+		ModInjectPlugin('zlink', 'wnpPlugin')
+
+		ModHTML('zlink', {
+			--Inject WNP script declaration
+			['(</body>)'] = '<script type="text/javascript" src="/wnpPlugin.js"></script>%1',
+			--Set up a decoy button for us to trigger PlayerUI.prototyp.injectSpicetify
+			['<div class="controls">'] = '%1<button type="button" id="spicetify-inject" class="button hidden" data-bind="click: injectSpicetify"></button>',
+		}, htmlModded['zlink'])
+		htmlModded['zlink'] = true
+
+		ModJS('zlink', 'main.bundle', {
+			--Inject PlayerUI.prototype.injectSpicetify function into main.bundle.js
+			--	chrome.globalSeek(position): change song position
+			--		@param: position		in milisecond
+			--
+			--	chrome.globalVolume(volume): change player volume
+			--		@param: volume			float 0 to 1
+			['(,PlayerUI%.prototype%.setup)'] = ',PlayerUI.prototype.injectSpicetify=function(){chrome.globalSeek=this.seek;chrome.globalVolume=function(v){eventDispatcher.dispatchEvent(new Event(Event.TYPES.PLAYER_VOLUME, v))};}%1',
+
+			--Leak track meta data to chrome.songData
+			['(const metadata=data%.track%.metadata;)'] = '%1chrome.songData=data.track;'
+		}, jsModded['zlink'])
+		jsModded['zlink'] = true
+	end
+
+	if (lyrics) then
+		ModJS('lyrics', 'bundle', {
+			["(trackControllerOpts%.noService = ).-;"] = "%1false;",
+			["(const anyAbLyricsEnabled = ).-;"] = "%1true"
+		}, jsModded['lyrics'])
+		jsModded['lyrics'] = fatruelse
 	end
 
 	status = 'Mod succeeded'
