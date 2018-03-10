@@ -478,13 +478,13 @@ function ModCSS()
 			})
 		end
 
-		if lyrics then 
+		if lyrics then
 			d = table.concat({d,
 				".lyrics-button {\ndisplay: inline-block !important;\nvisibility: visible !important;\n}\n"
 			})
 		end
 
-		if fullscreen then 
+		if fullscreen then
 			d = table.concat({d,
 				".lyrics-button {\ndisplay: inline-block !important;\nvisibility: visible !important;\n}\n"
 			})
@@ -717,7 +717,10 @@ function Finishing()
 			--
 			--	chrome.globalVolume(volume): change player volume
 			--		@param: volume			float 0 to 1
-			['(,PlayerUI%.prototype%.setup)'] = ',PlayerUI.prototype.injectSpicetify=function(){chrome.globalSeek=this.seek;chrome.globalVolume=function(v){eventDispatcher.dispatchEvent(new Event(Event.TYPES.PLAYER_VOLUME, v))};}%1'
+			['(,PlayerUI%.prototype%.setup)'] = ',PlayerUI.prototype.injectSpicetify=function(){chrome.globalSeek=this.seek;chrome.globalVolume=function(v){eventDispatcher.dispatchEvent(new Event(Event.TYPES.PLAYER_VOLUME, v))};}%1',
+
+			--Leak track meta data to chrome.songData
+			['(const metadata=data%.track%.metadata;)'] = '%1chrome.songData=data.track;'
 		}, jsModded['zlink'])
 		jsModded['zlink'] = true
 	end

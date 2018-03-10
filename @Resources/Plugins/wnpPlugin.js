@@ -4,7 +4,6 @@ var currAlbum;
 var currCover;
 var currPos;
 var currDur;
-var currDurMiliSec;
 var currVolume;
 var currRating;
 var currRepeat;
@@ -252,15 +251,6 @@ function updateInfo()
 				if (currDur !== temp && temp !== null) {
 					ws.send("DURATION:" + temp);
 					currDur = temp;
-					//Convert duration string to milisecond 
-					var time = [];
-					while (true) {
-						var n = temp.lastIndexOf(":");
-						time.push(parseInt(temp.substr(n + 1)));
-						temp = temp.replace(new RegExp(temp.substr(n) + "$"), "")
-						if (n == -1) break;
-					}
-					currDurMiliSec = (time[0] + (time[1] ? time[1] * 60 : 0) + (time[2] ? time[2] * 60 * 60 : 0)) * 1000;
 				}
 			}
 		}
@@ -580,7 +570,6 @@ function init()
 		currCover = null;
 		currPos = null;
 		currDur = null;
-		currDurMiliSec = null;
 		currVolume = null;
 		currRating = null;
 		currRepeat = null;
@@ -618,7 +607,7 @@ function setup()
 
 	spotifyInfoHandler.player = function()
 	{
-		return "Spotify";
+		return "Spotify Desktop";
 	};
 
 	spotifyInfoHandler.readyCheck = function()
@@ -633,22 +622,33 @@ function setup()
 	};
 	spotifyInfoHandler.title = function()
 	{
-		return document.getElementsByClassName("view-player")[0].getElementsByClassName("track")[0].innerText.replace(/\n/,"");
+		return chrome.songData ? chrome.songData.metadata.title : "N/A";
+	};
+	spotifyInfoHandler.trackID = function()
+	{
+		return chrome.songData ? chrome.songData.uri : "";
 	};
 	spotifyInfoHandler.artist = function()
 	{
 		return document.getElementsByClassName("view-player")[0].getElementsByClassName("artist")[0].innerText.replace(/\n/,"");
 	};
+	spotifyInfoHandler.artistID = function()
+	{
+		return chrome.songData ? chrome.songData.metadata.artist_uri : "";
+	};
 	spotifyInfoHandler.album = function()
 	{
-		return "N/A";
+		return chrome.songData ? chrome.songData.metadata.album_title : "N/A";
+	};
+	spotifyInfoHandler.albumID = function()
+	{
+		return chrome.songData ? chrome.songData.metadata.album_uri : "";
 	};
 	spotifyInfoHandler.cover = function()
 	{
-		var currCover = document.getElementsByClassName("view-player")[0]
-						.getElementsByClassName("cover-image")[0].style.backgroundImage;
-		if (currCover)
-			return "https://i.scdn.co/image/" + currCover.substring(currCover.lastIndexOf(":") + 1, currCover.indexOf(")") - 1)
+		var currCover = chrome.songData? chrome.songData.metadata.image_xlarge_url : "" 
+		if (currCover !== "" && currCover.indexOf("localfile") === -1)
+			return "https://i.scdn.co/image/" + currCover.substring(currCover.lastIndexOf(":") + 1)
 		else
 			return ""
 	};
@@ -725,9 +725,10 @@ function setup()
 			document.getElementById("spicetify-inject").click()
 		}
 
-		if (currDurMiliSec !== null) 
+		var durMili = chrome.songData ? chrome.songData.metadata.duration : 0;
+		if (durMili !== 0)
 		{
-			chrome.globalSeek(Math.round(currDurMiliSec * progress));
+			chrome.globalSeek(Math.round(durMili * progress));
 		}
 	};
 	spotifyEventHandler.volume = function(volume)
