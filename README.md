@@ -11,9 +11,9 @@
 
 **Note:** Only normal Spotify version is supported. Windows Store version is under a write permission required folder so I can't make it to work. Normal Spotify installer can be found in @Resource folder.  
 
-![Demo1](https://i.imgur.com/VN8oaHO.png)
+![Demo1](https://i.imgur.com/AzvV1WR.png)
 
-![Demo2](https://i.imgur.com/m3FjX6n.png)
+![Demo2](https://i.imgur.com/eiAPF6j.png)
 
 ## Themes
 If you have multiple themes in Themes folder, click at back and next buttons to rotate through all of them. You also can create new theme and duplicate current theme instantly by using right mouse context menu.
