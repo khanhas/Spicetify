@@ -1,3 +1,7 @@
+.kjfhdskjfhsdkjfh {
+	background: black;
+	color:white;
+}
 /*Round corner cover image*/
 .card-image, 
 .card-placeholder-wrapper, 
@@ -71,7 +75,11 @@ body.remotebar .view-player .player-bar-wrapper {
 .card-image-hit-area .card-button-more,
 .GlueCard__image-hit-area .card-button-add,
 .GlueCard__image-hit-area .card-button-play,
-.GlueCard__image-hit-area .card-button-more{
+.GlueCard__image-hit-area .card-button-more,
+.GlueCard__image-hit-area .GlueCard__play-button,
+.GlueCard__image-hit-area .GlueCard__add-button,
+.GlueCard__image-hit-area .GlueCard__more-button,
+.GlueCard__image-hit-area .GlueCard__overlay {
 	transition-property: all !important;
 	transition-duration: 1s !important;
 	transition-timing-function: cubic-bezier(.3,0,0,1) !important;
@@ -82,9 +90,16 @@ body.remotebar .view-player .player-bar-wrapper {
 .card-image-hit-area:not(.no-hover):hover .card-button-more,
 .GlueCard__image-hit-area:not(.no-hover):hover .card-button-add,
 .GlueCard__image-hit-area:not(.no-hover):hover .card-button-play,
-.GlueCard__image-hit-area:not(.no-hover):hover .card-button-more  {
+.GlueCard__image-hit-area:not(.no-hover):hover .card-button-more {
 	opacity: 1 !important;
 	transform: translateY(-10px);
+}
+
+.GlueCard__image-hit-area:hover .GlueCard__play-button,
+.GlueCard__image-hit-area:hover .GlueCard__add-button,
+.GlueCard__image-hit-area:hover .GlueCard__more-button,
+.GlueCard__image-hit-area:hover .GlueCard__overlay {
+	opacity: 1 !important;
 }
 
 .card-placeholder-wrapper {
@@ -93,7 +108,7 @@ body.remotebar .view-player .player-bar-wrapper {
 
 /*Spice up search input background*/
 .SearchInput__input {
-	background-color: rgba(modspotify_rgb_scrollbar_fg_and_selected_row_bg, 0.5) !important;
+	background-color: rgba(var(--modspotify_rgb_scrollbar_fg_and_selected_row_bg), 0.5) !important;
 }
 
 /*Fixed player bar height and add cool shadow under*/
@@ -159,20 +174,21 @@ Expand when hovering on windows's left edge
 	/*Widen the hover zone here*/
 	min-width: 15px !important;
 	width: 15px !important;
-	transition-property: width !important;
 	transition-duration: .5s !important;
 	transition-timing-function: cubic-bezier(.3,0,0,1) !important;
+	opacity: 0;
 }
 
 /*Expanded sidebar width*/
 .sidebar:hover {
 	width: 200px !important;
+	opacity: 1;
 }
 
 .sidebar .sidebar-navbar.sidebar-scroll-element {
 	padding-top: 30px !important;
 	padding-bottom: 60px !important;
-	background-color: #modspotify_main_bg !important;
+	background-color: var(--modspotify_main_bg) !important;
 	opacity: 0 !important;
 	transition-property: opacity !important;
 	transition-duration: .5s !important;
@@ -252,6 +268,7 @@ Move progress bar to bottom of window
 	top: 100% !important;
 	margin-top: -4px !important;
 	border-radius: 0 2px 2px 0 !important;
+	background-color: var(--modspotify_main_fg);
 }
 
 /* Add round corner for Gerne and Mood cards */
@@ -290,7 +307,7 @@ Collage of 3 album covers is usually seen in Browse and Chart.
 
 .card-puff__title {
 	padding: 5px 10px 5px 10px !important;
-	background-color: rgba(modspotify_rgb_cover_overlay_and_shadow,0.8) !important;
+	background-color: rgba(var(--modspotify_rgb_cover_overlay_and_shadow),0.8) !important;
 	border-radius: 10px 10px 0 0 !important;
 	text-align: left !important;
 	width: calc(100% - 40px) !important;
@@ -315,7 +332,7 @@ form, so I move last cover to the right 20px and first one to the left 20px
 /**/
 .glue-page-header__background-color {
 	background-image: none !important;
-	background: #modspotify_main_bg;
+	background: var(--modspotify_main_bg);
 }
 
 .glue-page-header__background-overlay {
@@ -355,7 +372,7 @@ Button with text Play
 */
 .button.button-green,
 .GlueButton.GlueButton--style-green {
-	color: #modspotify_main_bg !important;
+	color: var(--modspotify_main_bg) !important;
 }
 
 /*
@@ -366,7 +383,7 @@ Change text color in playlist
 .tl-cell:not(.tl-number),
 .tl-cell a:link,
 .tl-highlight {
-  color: #modspotify_secondary_fg;
+  color: var(--modspotify_secondary_fg);
 }
 
 .card-type-album .card-info-title,
@@ -392,7 +409,7 @@ Change text color in playlist
 }
 
 .GlueHeader__background-overlay {
-	background: #modspotify_main_bg !important;
+	background: var(--modspotify_main_bg) !important;
 }
 
 /* Move navigation buttons and search field to the right and down */
@@ -419,7 +436,7 @@ Change text color in playlist
 /* Spice up Fullscreen mode */
 #view-player .album-art .album-art__image {
 	border-radius: 30px !important;
-	box-shadow: 0 10px 70px rgba(modspotify_rgb_cover_overlay_and_shadow,.5) !important;
+	box-shadow: 0 10px 70px rgba(var(--modspotify_rgb_cover_overlay_and_shadow),.5) !important;
 }
 
 #view-player .album-art .album-art__image .card-image-content-wrapper,
@@ -458,7 +475,7 @@ and add little glowing effect
 }
 
 .nav.navbar-nav a:focus:not(.button):active::after{
-	background-color: #modspotify_pressing_fg !important;
+	background-color: var(--modspotify_pressing_fg) !important;
 }
 
 /* Friend sidebar */
@@ -531,5 +548,20 @@ and add little glowing effect
 
 .lyrics-lines-container, 
 .message-container {
-	color: #modspotify_secondary_fg !important;
+	color: var(--modspotify_secondary_fg) !important;
+}
+
+
+/* Home page */
+.GlueCarousel__grid-wrapper::-webkit-scrollbar-thumb {
+	display: none;
+}
+
+.GlueCard__info-wrapper {
+	margin-bottom: 30px;
+}
+
+/* Weird navbar in Browse */
+.app-header div[data-node="navbar"] .navbar.sticky-top {
+	display: none;
 }
