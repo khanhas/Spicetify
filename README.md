@@ -35,7 +35,7 @@ To sastify any web developer that has experience with CSS, **Inject CSS** option
 
 Choose **Edit CSS** button to open up user.css file. Find element class name and id in CSS files in @Resources\Extracted folder or enable Developer mode to be able to use DevTool and Inspect Element. 
 
-You can use my CSS variables for colors instead of hard coding color value into CSS, so you can publish your Spotify theme and keep it customizable. Remember, hex value has to start with `#` and doesn't have alpha value. 
+You can use my CSS variables for colors instead of hard coding color value into CSS, so you can publish your Spotify theme and keep it customizable.
  
 ```
 var(--modspotify_main_fg)
