@@ -171,7 +171,12 @@ function ParseCoreSetting()
 	devTool = SKIN:GetVariable("DevTool") == '1'
 	radio = SKIN:GetVariable("Radio") == '1'
 	home = SKIN:GetVariable("Home") == '1'
+	lyric = SKIN:GetVariable("Lyric") == '1'
 	sentry = SKIN:GetVariable("DisableSentry") == '1'
+	lyric_alwaysShow = SKIN:GetVariable("LyricAlwaysShow") == '1'
+	lyric_noSync = SKIN:GetVariable("LyricForceNoSync") == '1'
+	vis_highFramerate = SKIN:GetVariable("VisualizationHighFramerate") == '1'
+	vis_customVis = SKIN:GetVariable("CustomVisualization") == '1'
 end
 
 liveUpdate = false
@@ -307,20 +312,26 @@ function Unzip()
 	--Pre-process
 	if (nX) then
 		if (sentry) then
-			local p = SKIN:ReplaceVariables("#@#Extracted\\Raw\\" .. nX .. "\\bundle.js")
-			local f = io.open(p, 'r')
-			if (not f) then
-				p = SKIN:ReplaceVariables("#@#Extracted\\Raw\\" .. nX .. "\\main.bundle.js")
-				f = io.open(p, 'r')
-			end
-			if (f) then
-				UpdateStatus("Removing Sentry of " .. n)
-				local d = f:read('*a')
-				f:close()
+			function disableSentry(d)
 				d = d:gsub('sentry%.install%(%),?', '')
-				f = io.open(p, 'w')
-				f:write(d)
-				f:close()
+				if (nX == "browse" or nX == "collection" or
+					nX == "genre" or nX == "hub") then
+						d =d:gsub('logUIInteraction5%(json, logInConsole%) %{', '%1return;', 1)
+							:gsub('logUIImpression5%(json, logInConsole%) %{', '%1return;', 1)
+							:gsub('_logUIInteraction5%(json%) %{', '%1return;', 1)
+							:gsub('_logUIImpression5%(json%) %{', '%1return;', 1)
+				end
+
+				if (nX == "zlink") then
+					d = d:gsub('_logUIInteraction5=function.-{', '%1return;')
+						:gsub('_UIInteraction2%.default%.log', 'void')
+				end
+				return d
+			end
+			UpdateStatus("Removing Sentry of " .. n)
+			local p = "#@#Extracted\\Raw\\" .. nX .. "\\bundle.js"
+			if (not fileUtil(p, disableSentry)) then
+				fileUtil("#@#Extracted\\Raw\\" .. nX .. "\\main.bundle.js", disableSentry)
 			end
 		end
 
@@ -780,6 +791,82 @@ function Finishing()
 		})
 	end
 
+	local modOptions = ''
+	if (lyric and lyric_alwaysShow) then
+		UpdateStatus('Enabling Lyrics + button always show')
+		ModJS('lyrics', 'bundle', {
+			{'const anyAbLyricsEnabled = ', '%1true || ', 1}
+		})
+		ModJS('zlink', 'main.bundle', {
+			{'(lyricsEnabled%()trackHasLyrics&&%(.-%)', '%1true', 1}
+		})
+		modOptions = 'trackControllerOpts.noService = false;\n'
+	elseif (lyric) then
+		UpdateStatus('Enabling Lyrics')
+		ModJS('lyrics', 'bundle', {
+			{'const anyAbLyricsEnabled = ', '%1true || ', 1}
+		})
+		ModJS('zlink', 'main.bundle', {
+			{'(lyricsEnabled%(trackHasLyrics)&&%(.-%)', '%1', 1}
+		})
+		modOptions = 'trackControllerOpts.noService = false;\n'
+	elseif (lyric_alwaysShow) then
+		UpdateStatus('Enabling Always show lyrics button')
+		ModJS('zlink', 'main.bundle', {
+			{'(lyricsEnabled%()trackHasLyrics&&%(.-%)', '%1true', 1}
+		})
+	end
+
+	if (vis_highFramerate) then
+		modOptions = modOptions .. 'trackControllerOpts.highVisualizationFrameRate = true;\n'
+	end
+	if (lyric_noSync) then
+		modOptions = modOptions .. 'lyricsControllerOpts.forceNoSyncLyrics = true;\n'
+	end
+
+	if (modOptions ~= '') then
+		ModJS('lyrics', 'bundle', {
+			{'trackController%.init%(trackControllerOpts%)', modOptions .. '%1', 1}
+		})
+	end
+
+	if (vis_customVis) then
+		UpdateStatus('Adding custom visualization')
+		ModJS('lyrics', 'bundle', {
+			{'module%.exports = Manifest;.-%},%{', [[
+Manifest.push({
+  id: 'cross_square',
+  name: 'Rotating Square',
+  reactive: false,
+  Constructor: function() {
+    const GridVisualization = require('./index');
+    const Polygon = require('../../common/geom/polygon');
+    function DotsGrid() {
+      GridVisualization.call(this, GridVisualization.CROSS, Polygon.Square);
+    }
+    DotsGrid.prototype = Object.create(GridVisualization.prototype);
+    return new DotsGrid();
+  }
+});
+Manifest.push({
+  id: 'cross_triangle',
+  name: 'Rotating Triangle',
+  reactive: false,
+  Constructor: function() {
+    const GridVisualization = require('./index');
+    const Polygon = require('../../common/geom/polygon');
+    function DotsGrid() {
+      GridVisualization.call(this, GridVisualization.CROSS, Polygon.Triangle);
+    }
+    DotsGrid.prototype = Object.create(GridVisualization.prototype);
+    return new DotsGrid();
+  }
+});
+
+%1"../../common/geom/polygon":302,"./index":322,]], 1}
+		})
+
+	end
 	UpdateStatus('Injecting a websocket and jquery 3.3.1')
 	ModHTML('zlink', {
 		{'(</body>)', '<script type="text/javascript" src="/jquery-3.3.1.min.js"></script><script type="text/javascript" src="/spicetifyWebSocket.js"></script>%1'}
@@ -840,6 +927,10 @@ function Finishing()
 		, 1},
 		--Register song change event
 		{'this%._uri=track%.uri,this%._trackMetadata=track%.metadata', '%1,chrome.player&&chrome.player.dispatchEvent(new Event("songchange"))', 1},
+		--Register play/pause state change event
+		{'this%.playing%(data%.is_playing&&!data%.is_paused%).-;', '%1(this.playing()!==this._isPlaying)&&(this._isPlaying=this.playing(),chrome.player&&chrome.player.dispatchEvent(new Event("onplaypause")));', 1},
+		--Register progress change event
+		{'PlayerUI%.prototype%._onProgressBarProgress=function.-%{', '%1chrome.player&&chrome.player.dispatchEvent(new Event("onprogress"));', 1},
 		--Leak Cosmos API to chrome.cosmosAPI
 		{'var _spotifyCosmosApi2=_interop.-;', '%1chrome.cosmosAPI=_spotifyCosmosApi2.default;',1}
 
