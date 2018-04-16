@@ -358,6 +358,7 @@ function Unzip()
 						 :gsub('(exports%.logListItemSelected = )logListItemSelected', '%1()=>{}', 1)
 						 :gsub('(exports%.logFeedbackInteraction = )logFeedbackInteraction', '%1()=>{}', 1)
 				end
+				return d
 			end
 
 			if (not fileUtil(p, disableLogging)) then
