@@ -311,39 +311,64 @@ end
 function Unzip()
 	--Pre-process
 	if (nX) then
+		local p = "#@#Extracted\\Raw\\" .. nX .. "\\bundle.js"
+		local altP = "#@#Extracted\\Raw\\" .. nX .. "\\main.bundle.js"
 		if (sentry) then
 			function disableSentry(d)
-				d = d:gsub('sentry%.install%(%),?', '')
+				d = d:gsub('sentry%.install%(%),?', '', 1)
+				return d
+			end
+
+			UpdateStatus("Removing Sentry of " .. n)
+			if (not fileUtil(p, disableSentry)) then
+				fileUtil(altP, disableSentry)
+			end
+		end
+
+		if (logging) then
+			function disableLogging(d)
 				if (nX == "browse" or nX == "collection" or
 					nX == "genre" or nX == "hub") then
-						d =d:gsub('logUIInteraction5%(json, logInConsole%) %{', '%1return;', 1)
-							:gsub('logUIImpression5%(json, logInConsole%) %{', '%1return;', 1)
-							:gsub('_logUIInteraction5%(json%) %{', '%1return;', 1)
-							:gsub('_logUIImpression5%(json%) %{', '%1return;', 1)
+					UpdateStatus("Removing UI logger of " .. n)
+					d =d:gsub('logUIInteraction5%(json, logInConsole%) %{', '%1return;', 1)
+						:gsub('logUIImpression5%(json, logInConsole%) %{', '%1return;', 1)
+						:gsub('_logUIInteraction5%(json%) %{', '%1return;', 1)
+						:gsub('_logUIImpression5%(json%) %{', '%1return;', 1)
+						:gsub('this%._documentFragment%.query%(\'%[data%-log%-click%]\'%)', 'return;%1')
+						:gsub('_onClickDataLogClick%(element%) %{', '%1return;')
 				end
 
 				if (nX == "zlink") then
+					UpdateStatus("Removing UI logger of " .. n)
 					d = d:gsub('_logUIInteraction5=function.-{', '%1return;')
 						:gsub('_UIInteraction2%.default%.log', 'void')
 				end
-				return d
+
+				if (nX == "lyrics") then
+					UpdateStatus("Removing UI logger of " .. n)
+					d = d:gsub('LoggingService%.prototype%..-%{', '%1return;')
+				end
+
+				if (nX == "playlist") then
+					UpdateStatus("Removing UI logger of " .. n)
+					d = d:gsub('(exports%.logPlaylistImpression = )logPlaylistImpression', '%1()=>{}', 1)
+						 :gsub('(exports%.logEndOfListImpression = )logEndOfListImpression', '%1()=>{}', 1)
+						 :gsub('(exports%.logListQuickJump = )logListQuickJump', '%1()=>{}', 1)
+						 :gsub('(exports%.logListItemSelected = )logListItemSelected', '%1()=>{}', 1)
+						 :gsub('(exports%.logFeedbackInteraction = )logFeedbackInteraction', '%1()=>{}', 1)
+				end
 			end
-			UpdateStatus("Removing Sentry of " .. n)
-			local p = "#@#Extracted\\Raw\\" .. nX .. "\\bundle.js"
-			if (not fileUtil(p, disableSentry)) then
-				fileUtil("#@#Extracted\\Raw\\" .. nX .. "\\main.bundle.js", disableSentry)
+
+			if (not fileUtil(p, disableLogging)) then
+				fileUtil(altP, disableLogging)
 			end
 		end
 
 		fileUtil("#@#Extracted\\Raw\\" .. nX .. "\\index.html", function (data)
 				return data:gsub('</head>',
-					'<link rel="stylesheet" class="spicetify-userCSS" href="https://zlink.app.spotify.com/user.css">%1', 1)
-						:gsub('href="css/glue.css"', 'href="https://zlink.app.spotify.com/css/glue.css"', 1)
+					'<link rel="stylesheet" class="spicetify-userCSS" href="css/user.css">%1', 1)
 			end
 		)
-		if (nX ~= "zlink") then
-			os.remove(SKIN:ReplaceVariables('#@#Extracted\\Raw\\' .. nX .. '\\css\\glue.css'))
-		end
 	end
 
 	bC = bC + 1
@@ -727,36 +752,38 @@ end
 
 function CopyUserCSS()
 	UpdateStatus('Transferring user.css')
-	local d = ''
+	local d = {}
 
-	f = io.open(SKIN:ReplaceVariables("%appdata%\\Spotify\\Apps\\zlink\\user.css"), 'w+')
 
-	if theme then
-		UpdatePercent()
-		f:write('\n:root {\n')
-		for k,v in ipairs(color) do
-			f:write(
-				'	--modspotify_', v.var, ':#', v.hex, ';\n',
-				'	--modspotify_rgb_', v.var, ':', v.rgb, ';\n'
-			)
-		end
-		f:write('}\n')
+	UpdatePercent()
+	table.insert(d, ':root {')
+	for k,v in ipairs(color) do
+		table.insert(d, table.concat({
+			'	--modspotify_', v.var, ':#', v.hex, ';\n',
+			'	--modspotify_rgb_', v.var, ':', v.rgb, ';'
+		}))
 	end
+	table.insert(d, '}')
 
 	if injectCSS then
 		UpdatePercent()
 		local css = io.open(SKIN:ReplaceVariables("#ROOTCONFIGPATH#Themes\\#CurrentTheme#\\user.css"),'r')
-		local d = ''
-		if f then
-			d = css:read('*a')
+		local u = ''
+		if (css) then
+			u = css:read('*a')
 		else
 			print('user.css is not found in theme folder. Please make one.')
 		end
 		css:close()
-		f:write(d)
+		table.insert(d, u)
 	end
-
-	f:close()
+	for _, v in pairs(spaList) do
+		local f = io.open(SKIN:ReplaceVariables("%appdata%\\Spotify\\Apps\\" .. v .. "\\css\\user.css"), 'w+')
+		if (f) then
+			f:write(table.concat(d, '\n'))
+			f:close()
+		end
+	end
 end
 
 function UpdateUserCSS()
@@ -865,8 +892,8 @@ Manifest.push({
 
 %1"../../common/geom/polygon":302,"./index":322,]], 1}
 		})
-
 	end
+
 	UpdateStatus('Injecting a websocket and jquery 3.3.1')
 	ModHTML('zlink', {
 		{'(</body>)', '<script type="text/javascript" src="/jquery-3.3.1.min.js"></script><script type="text/javascript" src="/spicetifyWebSocket.js"></script>%1'}
@@ -911,7 +938,7 @@ Manifest.push({
 			'chrome.player.eventListeners={};',
 			'chrome.player.addEventListener=(type,callback)=>{if(!(type in chrome.player.eventListeners)){chrome.player.eventListeners[type]=[]}chrome.player.eventListeners[type].push(callback)};',
 			'chrome.player.removeEventListener=(type,callback)=>{if(!(type in chrome.player.eventListeners)){return}var stack=chrome.player.eventListeners[type];for(var i=0,l=stack.length;i<l;i+=1){if(stack[i]===callback){stack.splice(i,1);return}}};',
-			'chrome.player.dispatchEvent=(event)=>{if(!(event.type in chrome.player.eventListeners)){return true}var stack=chrome.player.eventListeners[event.type];for(var i=0,l=stack.length;i<l;i+=1){stack[i](event)}return!event.defaultPrevented};'
+			'chrome.player.dispatchEvent=(event)=>{if(!(event.type in chrome.player.eventListeners)){return true}var stack=chrome.player.eventListeners[event.type];for(var i=0,l=stack.length;i<l;i+=1){stack[i](event)}return!event.defaultPrevented};',
 		}), 1},
 
 		--Leak track meta data, player state, current playlist to chrome.playerData
@@ -923,8 +950,13 @@ Manifest.push({
 			'var uriToId=u=>{var t=u.match(/^spotify:track:(.*)/);if(!t||t.length<2)return false;else return t[1]};',
 			'chrome.getAudioData=(callback, uri)=>{uri=uri||chrome.playerData.track.uri;if(typeof(callback)!=="function"){console.log("chrome.getAudioData: callback has to be a function");return;};var id=uriToId(uri);if(id)cosmos.resolver.get(`hm://audio-attributes/v1/audio-analysis/${id}`, (e,p)=>{if(e){console.log(e);callback(null);return;}if(p._status===200&&p._body&&p._body!==""){var data=JSON.parse(p._body);data.uri=uri;callback(data);}else callback(null)})};',
 			'new Player(cosmos.resolver,"spotify:internal:queue","queue","1.0.0").subscribeToQueue((e,r)=>{if(e){console.log(e);return;}chrome.queue=r.getJSONBody();});',
-			'%1'})
-		, 1},
+			'%1'}), 1},
+		{'(class Queue extends BaseAction.-)%}', table.concat({'%1;',
+			'chrome.libURI = liburi;',
+			'chrome.addToQueue=(uri,callback)=>{uri=liburi.from(uri);if(uri.type===liburi.Type.SHOW||uri.type===liburi.Type.ALBUM){this._adaptor.getAlbumTracks(uri,(err,tracks)=>{if(err){console.log("chrome.addToQueue",err);return};this._adaptor.queueTracks(tracks,callback)})}else if(uri.type===liburi.Type.TRACK||uri.type===liburi.Type.EPISODE){this._adaptor.queueTracks([uri],callback)}else{console.log("chrome.addToQueue: Only Track and Album URIs are accepted")}};',
+			'chrome.removeFromQueue=(uri,callback)=>{if(chrome.queue){var indices=[],uriObj=liburi.from(uri);if(uriObj.type===liburi.Type.ALBUM){this._adaptor.getAlbumTracks(uriObj,(err,tracks)=>{if(err){console.log(err);return}tracks.forEach(t=>chrome.queue.next_tracks.forEach((nt,index)=>t==nt.uri&&indices.push(index)))})}else if(uriObj.type===liburi.Type.TRACK||uriObj.type===liburi.Type.EPISODE){chrome.queue.next_tracks.forEach((track,index)=>track.uri==uri&&indices.push(index))}else{console.log("chrome.removeFromQueue: Only Album, Track and Episode URIs are accepted")}indices=indices.reduce((a,b)=>{if(a.indexOf(b)<0){a.push(b)}return a},[]);this._adaptor.removeTracksFromQueue(indices,callback)}};',
+			'};'
+		}), 1},
 		--Register song change event
 		{'this%._uri=track%.uri,this%._trackMetadata=track%.metadata', '%1,chrome.player&&chrome.player.dispatchEvent(new Event("songchange"))', 1},
 		--Register play/pause state change event
@@ -940,13 +972,23 @@ Manifest.push({
 	for k, v in pairs(extensionTable) do
 		if (actExtension[v.file]) then
 			UpdateStatus('Injecting extension ' .. v.name)
-            ModHTML('zlink', {
-                {'(</body>)', '<script type="text/javascript" src="/' .. v.file .. '"></script>%1'}
-            })
+			ModHTML('zlink', {
+				{'(</body>)', '<script type="text/javascript" src="/' .. v.file .. '"></script>%1'}
+			})
 			ModInjectExtension('zlink', "#ROOTCONFIGPATH#Extensions\\", v.file)
 		end
 	end
 
+	appIndex = 0
+	actApp = App_ParseActivated()
+	if (actApp:length() > 0) then
+		App_CopyRountine()
+	else
+		Succeeded()
+	end
+end
+
+function Succeeded()
 	UpdateStatus('Mod succeeded', 'done')
 	UpdatePercent()
 	if (firstTimeMod) then
@@ -997,8 +1039,12 @@ end
 
 function Extension_ParseActivated()
 	local r = {}
-	local list = SKIN:GetVariable('ActivatedExtensions')
-	if (list:sub(list:len()) ~= ';') then
+	local list = SKIN:GetVariable('ActivatedExtensions', '')
+	if (list:len() <= 1) then
+		SKIN:Bang('!SetVariable', 'ActivatedExtensions', " ")
+		SKIN:Bang('!WriteKeyValue', 'Variables', 'ActivatedExtensions', " ")
+		return r
+	elseif (list:sub(list:len()) ~= ';') then
 		list = list .. ';'
 		SKIN:Bang('!SetVariable', 'ActivatedExtensions', list)
 		SKIN:Bang('!WriteKeyValue', 'Variables', 'ActivatedExtensions', list)
@@ -1046,7 +1092,6 @@ function Extension_DrawPage(n)
 			SKIN:Bang('!HideMeterGroup', 'ExtensionGroup' .. i)
 		end
 		SKIN:Bang('!UpdateMeterGroup', 'ExtensionGroup' .. i)
-		SKIN:Bang('!Redraw')
 	end
 
 	if (n == 1) then
@@ -1088,4 +1133,196 @@ function Extension_ChangePage(dir)
 		extensionPage = extensionPage + dir
 		Extension_DrawPage(extensionPage)
 	end
+end
+
+-- APPS
+
+appTable = {}
+appPage = 1
+appTotalPage = 1
+function App_Init()
+	SKIN:Bang('!UpdateMeasure', 'AppFolderCount')
+	local count = SKIN:GetMeasure("AppFolderCount"):GetValue()
+	local name = SKIN:GetMeasure("AppFolderName")
+
+	appTotalPage = math.ceil(count / 5)
+	for i = 1, count do
+		SKIN:Bang('!SetOption', 'AppFolderName', 'Index', i)
+		SKIN:Bang('!UpdateMeasure', 'AppFolderName')
+		local p = name:GetStringValue()
+		local f = io.open(SKIN:ReplaceVariables('#ROOTCONFIGPATH#Apps\\' .. p ..'\\index.html'), 'r')
+		local appElement = {
+			file = p:lower(),
+			id = NormalizeAppId(p),
+			name = p,
+			author = 'N/A',
+			descr = 'N/A'
+		}
+		if (f) then
+			local d = f:read("*a")
+			f:close()
+			d = d:match("// START METADATA(.-)// END METADATA")
+
+			if (d) then
+				local appName = d:match('// NAME:(.-)\n'):gsub('^ ', '')
+				appElement.name = appName and appName or p
+				local appAuthor = d:match('// AUTHOR:(.-)\n'):gsub('^ ', '')
+				appElement.author = appAuthor and appAuthor or 'N/A'
+				local appDescr = d:match('// DESCRIPTION:(.-)\n'):gsub('^ ', '')
+				appElement.descr = appDescr and appDescr or 'N/A'
+			end
+		end
+
+		table.insert(appTable, appElement)
+	end
+	App_DrawPage(appPage)
+end
+
+function NormalizeAppId(name)
+	return name:gsub('%s', ''):gsub('%-(.)', function(c)return c:upper()end)
+end
+
+function App_ParseActivated()
+	local r = {}
+	local list = SKIN:GetVariable('ActivatedApps', '')
+	if (list:len() <= 1) then
+		SKIN:Bang('!SetVariable', 'ActivatedApps', " ")
+		SKIN:Bang('!WriteKeyValue', 'Variables', 'ActivatedApps', " ")
+		return r
+	elseif (list:sub(list:len()) ~= ';') then
+		list = list .. ';'
+		SKIN:Bang('!SetVariable', 'ActivatedApps', list)
+		SKIN:Bang('!WriteKeyValue', 'Variables', 'ActivatedApps', list)
+	end
+
+	local appCount = 0
+	for app in list:gmatch('(.-);') do
+		r[app:lower()] = true
+		appCount = appCount + 1
+	end
+	function r:length() return appCount end
+	return r
+end
+
+function App_DrawPage(n)
+	local actApp = App_ParseActivated()
+	for i = 1, 5 do
+		local index = (n - 1) * 5 + i
+		if (appTable[index]) then
+			local p = appTable[index]
+			SKIN:Bang('!SetOption', 'AppName' .. i, 'Text', p.name)
+			SKIN:Bang('!SetOption', 'AppName' .. i, 'ToolTipText', p.name)
+			SKIN:Bang('!SetOption', 'AppAuthor' .. i, 'Text', 'By ' .. p.author)
+			SKIN:Bang('!SetOption', 'AppAuthor' .. i, 'ToolTipText', p.author)
+			SKIN:Bang('!SetOption', 'AppDescr' .. i, 'Text', p.descr)
+			SKIN:Bang('!SetOption', 'AppDescr' .. i, 'ToolTipText', p.descr)
+			if (actApp[p.file]) then
+				SKIN:Bang('!SetOption', 'AppShadow' .. i, 'ImageAlpha', '')
+				SKIN:Bang('!SetOption', 'AppBack' .. i, 'Active', 'StrokeColor 8a4fff')
+				SKIN:Bang('!SetOption', 'AppActivate' .. i, 'Active', 'StrokeColor 8a4fff|FillColor 8a4fff')
+				SKIN:Bang('!SetOption', 'AppActivate' .. i, 'Active2', 'StrokeColor FFFFFF')
+				SKIN:Bang('!SetOption', 'AppActivate' .. i, 'MouseOverAction', '')
+				SKIN:Bang('!SetOption', 'AppActivate' .. i, 'MouseLeaveAction', '')
+			else
+				SKIN:Bang('!SetOption', 'AppShadow' .. i, 'ImageAlpha', '0')
+				SKIN:Bang('!SetOption', 'AppBack' .. i, 'Active', 'StrokeColor 200,200,200,200')
+				SKIN:Bang('!SetOption', 'AppActivate' .. i, 'Active', 'StrokeColor 200,200,200,200|FillColor 0,0,0,0')
+				SKIN:Bang('!SetOption', 'AppActivate' .. i, 'Active2', 'StrokeColor 0,0,0,0')
+				SKIN:Bang('!SetOption', 'AppActivate' .. i, 'MouseOverAction',
+					'[!SetOption #*CURRENTSECTION*# Active "StrokeColor 8a4fff|FillColor 8a4fff"][!UpdateMeter #*CURRENTSECTION*#][!Redraw]')
+				SKIN:Bang('!SetOption', 'AppActivate' .. i, 'MouseLeaveAction',
+					'[!SetOption #*CURRENTSECTION*# Active "StrokeColor 200,200,200,200|FillColor 0,0,0,0"][!UpdateMeter #*CURRENTSECTION*#][!Redraw]')
+			end
+			SKIN:Bang('!SetOption', 'AppActivate' .. i, 'LeftMouseUpAction',
+				'!CommandMeasure Script "App_Toggle('.. index ..')"')
+			SKIN:Bang('!ShowMeterGroup', 'AppGroup' .. i)
+		else
+			SKIN:Bang('!HideMeterGroup', 'AppGroup' .. i)
+		end
+		SKIN:Bang('!UpdateMeterGroup', 'AppGroup' .. i)
+	end
+
+	if (n == 1) then
+		SKIN:Bang('!ShowMeter', 'AppBack_Disabled')
+		SKIN:Bang('!HideMeter', 'AppBack')
+	end
+	if (n == appTotalPage) then
+		SKIN:Bang('!ShowMeter', 'AppNext_Disabled')
+		SKIN:Bang('!HideMeter', 'AppNext')
+	end
+	if (n > 1) then
+		SKIN:Bang('!HideMeter', 'AppBack_Disabled')
+		SKIN:Bang('!ShowMeter', 'AppBack')
+	end
+	if (n < appTotalPage) then
+		SKIN:Bang('!HideMeter', 'AppNext_Disabled')
+		SKIN:Bang('!ShowMeter', 'AppNext')
+	end
+	SKIN:Bang('!Redraw')
+end
+
+function App_Toggle(n)
+	local actApp = App_ParseActivated()
+	local fileName = appTable[n].file
+	actApp[fileName] = not actApp[fileName]
+	local list = ''
+	for k, v in pairs(actApp) do
+		if (v) then
+			list = list .. k .. ';'
+		end
+	end
+	SKIN:Bang('!SetVariable', 'ActivatedApps', list)
+	SKIN:Bang('!WriteKeyValue', 'Variables', 'ActivatedApps', list)
+	App_DrawPage(appPage)
+end
+
+function App_ChangePage(dir)
+	if ((appPage + dir) >= 1) and ((appPage + dir) <= appTotalPage) then
+		appPage = appPage + dir
+		App_DrawPage(appPage)
+	end
+end
+
+function App_CopyRountine()
+	appIndex = appIndex + 1
+	if (not appPageLogger or not appMenuItems) then
+		appPageLogger, appMenuItems = {}, {}
+	end
+
+	if appIndex > #appTable then
+		ModJS('zlink', 'main.bundle', {
+			{'PAGE_LOGGER_MAP=%{', '%1' .. table.concat(appPageLogger), 1},
+			{'(return _pageIdentifiers2%.default%[normalizedAppId%]||)(_pageIdentifiers2%.default%.unknownUncovered)',
+			'%1normalizedAppId||%2', 1},
+			{'NavigationBar%.prototype%._initCollectionSection=function%(%)%{', '%1this.sections.push({id:"custom-apps",label:"Your Apps",items: ko.observableArray(['
+				.. table.concat(appMenuItems) .. '])});'
+			}
+		})
+		appPageLogger, appMenuItems = null, null
+		Succeeded()
+		return
+	end
+	local app = appTable[appIndex]
+	if (actApp[app.file:lower()]) then
+		UpdateStatus('Injecting app ' .. app.name)
+		SKIN:Bang('!SetOption', 'CopyApp', 'Parameter', table.concat({
+			'robocopy "#ROOTCONFIGPATH#Apps\\', app.file,
+			'" "%appdata%\\Spotify\\Apps\\', app.file,
+			'" /S /COPY:D /R:10 /W:1 /NS /LOG', appIndex ~= 1 and '+' or '',
+			':"#@#robocopy_copyapp_log.txt"'
+		}))
+		SKIN:Bang('!UpdateMeasure', 'CopyApp')
+
+		table.insert(appPageLogger, table.concat(
+			{'"', app.id, '":"',  app.id, '",'}
+		))
+		-- TODO: change first app.id to app.name
+		table.insert(appMenuItems, table.concat(
+			{'new MenuItem("', app.name, '","spotify:app:', app.id, '",{activeRegexp:/spotify:app:', app.id,'$/}),'}
+		))
+
+		SKIN:Bang('!CommandMeasure', 'CopyApp', 'Run')
+		return
+	end
+	App_CopyRountine()
 end
