@@ -177,6 +177,7 @@ function ParseCoreSetting()
 	lyric_noSync = SKIN:GetVariable("LyricForceNoSync") == '1'
 	vis_highFramerate = SKIN:GetVariable("VisualizationHighFramerate") == '1'
 	vis_customVis = SKIN:GetVariable("CustomVisualization") == '1'
+	logging = SKIN:GetVariable("DisableUILogging") == '1'
 end
 
 liveUpdate = false
