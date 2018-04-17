@@ -40,7 +40,7 @@
     </div>`;
 
   function init() {
-    if (!chrome.playerData || !chrome.player || !$('.track-text-item').length) {
+    if (!chrome.playerData || !chrome.player || (!jsonBinURL && !chrome.localStorage)) {
       setTimeout(init, 1000);
       return;
     }
