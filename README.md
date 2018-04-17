@@ -9,7 +9,7 @@
 **4.** Choose **Backup** in skin UI to start backing up original Spotify files  
 **5.** Pick color scheme, edit CSS then **Apply**  
 
-**Note:** Only normal Spotify version is supported. Windows Store version is under a write permission required folder so I can't make it to work. Normal Spotify installer can be found in @Resource folder.  
+**Note:** Only Spotify desktop version is supported. Windows Store version is under a write permission required folder so I can't make it to work. Normal Spotify installer can be downloaded [here](https://download.scdn.co/SpotifySetup.exe).
 
 ![Demo1](https://i.imgur.com/xPh0bI3.png)
 
