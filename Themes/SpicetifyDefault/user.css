@@ -1,7 +1,3 @@
-.kjfhdskjfhsdkjfh {
-	background: black;
-	color:white;
-}
 /*Round corner cover image*/
 .card-image, 
 .card-placeholder-wrapper, 
@@ -108,6 +104,7 @@ body.remotebar .view-player .player-bar-wrapper {
 
 /*Spice up search input background*/
 .SearchInput__input {
+	color: var(--modspotify_secondary_fg);
 	background-color: rgba(var(--modspotify_rgb_scrollbar_fg_and_selected_row_bg), 0.5) !important;
 }
 
@@ -188,7 +185,6 @@ Expand when hovering on windows's left edge
 .sidebar .sidebar-navbar.sidebar-scroll-element {
 	padding-top: 30px !important;
 	padding-bottom: 60px !important;
-	background-color: var(--modspotify_main_bg) !important;
 	opacity: 0 !important;
 	transition-property: opacity !important;
 	transition-duration: .5s !important;
@@ -350,13 +346,12 @@ meaningless followers number
 
 .carousel .card-info-subtitle-description,
 .carousel .card-info-subtitle-metadata,
-.carousel .card:not(.card-type-station).card-info-title {
+.carousel .card:not(.card-type-station).card-info-title,
+.carousel .card.card-type-playlist.image-loaded .card-info-subtitle-description,
+.carousel .card.card-type-playlist.image-loaded .card-info-subtitle-metadata {
 	display: none !important;
 }
 
-.carousel .card-info-wrapper {
-	height: 10px !important;
-}
 
 /*
 In top of Browse usually has bunch of Playlist or Album cards,
@@ -445,7 +440,7 @@ Change text color in playlist
 }
 
 /* Daily mixes */
-.card-attention-highlight-box .card-info-wrapper.card-info-with-description.card-info-with-metadata {
+.carousel .card-info-wrapper.card-info-with-description.card-info-with-metadata {
 	height: 50px !important;
 }
 
@@ -480,15 +475,17 @@ and add little glowing effect
 
 /* Friend sidebar */
 #view-buddy-list {
-	min-width: 5px !important;
-	width: 5px !important;
-	transition-property: width !important;
+	min-width: 15px !important;
+	width: 15px !important;
+	transition-property: all !important;
 	transition-duration: .5s !important;
 	transition-timing-function: cubic-bezier(.3,0,0,1) !important;
+	opacity: 0;
 }
 
 #view-buddy-list:hover {
 	width: 277px !important;
+	opacity: 1;
 }
 
 .body-container--windows .buddy-list-iframe {
@@ -551,7 +548,6 @@ and add little glowing effect
 	color: var(--modspotify_secondary_fg) !important;
 }
 
-
 /* Home page */
 .GlueCarousel__grid-wrapper::-webkit-scrollbar-thumb {
 	display: none;
@@ -559,9 +555,4 @@ and add little glowing effect
 
 .GlueCard__info-wrapper {
 	margin-bottom: 30px;
-}
-
-/* Weird navbar in Browse */
-.app-header div[data-node="navbar"] .navbar.sticky-top {
-	display: none;
 }
