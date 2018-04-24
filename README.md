@@ -15,29 +15,20 @@
 
 ![Demo2](https://i.imgur.com/eiAPF6j.png)
 
-## Themes
-If you have multiple themes in Themes folder, click at back and next buttons to rotate through all of them. You also can create new theme and duplicate current theme instantly by using right mouse context menu.
+## Outline
+- [Custom CSS](https://github.com/khanhas/Spicetify#custom-css)
+- [Themes](https://github.com/khanhas/Spicetify#themes)
+- [Extensions](https://github.com/khanhas/Spicetify#extensions)
+- [Apps](https://github.com/khanhas/Spicetify#apps)
 
-![Demo3](https://i.imgur.com/B9NkBU0.png)
-
-
-## How it works
-Spotify UI is HTML/CSS and runs inside Chromium Embedded Framework<sup>[[1]](https://www.quora.com/How-is-JavaScript-used-within-the-Spotify-desktop-application-Is-it-packaged-up-and-run-locally-only-retrieving-the-assets-as-and-when-needed-What-JavaScript-VM-is-used)</sup>. All CSS files controlling element attributes and interaction are packed in SPA files (they basically are ZIP).  
-
-These CSS files are extracted first then go through a preparation process that finds and replaces almost all colors with specific keywords.  
-
-When user applies his/her own colors scheme, all keywords are replaced with actual colors value, both in hex and RRR,GGG,BBB format. 
-
-After that, modded CSS and remaining files are transferred back to Spotify directory.
-
-## Advanced customization
+## Custom CSS
 To sastify any web developer that has experience with CSS, **Inject CSS** option will allow you to customize your Spotify client even more. 
 
 Choose **Edit CSS** button to open up user.css file. Find element class name and id in CSS files in @Resources\Extracted folder or enable Developer mode to be able to use DevTool and Inspect Element. 
 
 You can use my CSS variables for colors instead of hard coding color value into CSS, so you can publish your Spotify theme and keep it customizable.
  
-```
+```css
 var(--modspotify_main_fg)
 var(--modspotify_secondary_fg)
 var(--modspotify_main_bg)
@@ -64,7 +55,7 @@ Example:
 This will change buttons text color to *Secondary FG* color you picked in the skin.
 
 RRR,GGG,BBB format is also supported, use these variables:
-```
+```css
 var(--modspotify_rgb_main_fg)
 var(--modspotify_rgb_secondary_fg)
 var(--modspotify_rgb_main_bg)
@@ -92,10 +83,15 @@ This will change search input background color to the same color as progress sli
 
 **Note:** I included in skin package my own CSS config. If you prefer original Spotify UI, clear user.css file or uncheck Inject CSS.  
 
+## Themes
+If you have multiple themes in Themes folder, click at back and next buttons to rotate through all of them. You also can create new theme and duplicate current theme instantly by using right mouse context menu.
+
+![Demo3](https://i.imgur.com/B9NkBU0.png)
+
 ## Extensions
 Spicetify also allows you inject custom Javascript to support your theme or enhance your Spotify client functionalities. Just simply put .js file **Spicetify\Extentions** folder, activate it in Spicetify skin then Apply.
 To organize scripts in skin easily, put a metadata section at top of each JS with this template:
-```
+```js
 // START METADATA
 // NAME: Your script name
 // AUTHOR: Your name
@@ -104,7 +100,7 @@ To organize scripts in skin easily, put a metadata section at top of each JS wit
 ```
 Because every script is running in same enviroment so your variables/functions might conflict with global variables/functions or other scripts variables/functions. To prevent variables/functions leaking, wrap the whole script inside a function and run it immediately. Ex:
 
-```
+```js
 (function MyScript() {
 	// do stuff //
 })()
@@ -156,7 +152,63 @@ Name | Description
 ### Functions:
 Name | Param | Description
 --- | --- | ---
-`chrome.getAudioData` | (*callback*[, uri]) | Return current song audio data to *payload* and call *callback*(*payload*). You can specify a song *uri* to get that song audio data instead of current one.
+`chrome.getAudioData` | (*callback*[, *uri*]) | Return current song audio data to *payload* and call *callback*(*payload*). You can specify a song *uri* to get that song audio data instead of current one.
+`chrome.addToQueue` | (*uri*, *callback*) | Add *uri* to queue. Only track, album, espisode URI types are valid. 
+`chrome.removeFromQueue` | (*uri*, *callback*) | Remove *uri* from queue. Only track, album, espisode URI types are valid. 
+
+## Apps
+Inject custom apps to Spotify and access them in left sidebar.  
+If you're experienced with Javascript, React, Redux and want to make an app, here some tips:  
+- App folder name in `Spicetify\Apps` folder has to be in lowercase alphabet only. No space, or any symbol.
+- To organize apps in skin easily, put a metadata section at top of `index.html` file with this template:
+
+```html
+<!-- 
+// START METADATA
+// NAME: Your app name
+// AUTHOR: Your name
+// DESCRIPTION: A little information about what it does
+// END METADATA
+ -->
+```
+
+- Make a app from scratch might be really trivial, I suggest you take a look at available apps, pick one that has nearest set of features to your desired app. Then alternate part of its code to your purpose. By doing that, you can quickly make a app with native looks and behaviours.
+- All Spotify apps are compiled to bundle structure:  
+Module is an array with first item is executable function and second item is module's dependencies.  
+   
+```js
+Module1Number:[function(require,module,exports){
+    //Do stuff
+},{"Dependency1":Dependency1Number, "Dependency2":Dependency2Number}], Module2Number:[function(require,module,exports){
+    //Do stuff
+},{"Dependency1":Dependency1Number, "Dependency2":Dependency2Number}]
+```
+
+- A module could be a dependency of another module. When you need to use one module, specify a dependency name along with its module number to dependency object in your module array. For example, your custom module 500 needs module 124 to set up profile:
+
+```js
+...,
+500:[function(require,module,exports){
+    const profileSetup = require("profile");
+    profileSetup.init();
+},{"profile":124}]
+```
+
+- Use `bridge` module to request detail metadata of a lot of thing like artists, album, tracks.
+- `libURI` might be useful to convert URI/URL to an uri object that easier to categorize. 
+- `live` module can be used to communicate arcross modules through specified URI. URI can be anything but try keep it to unique.
+- `spotify-element` is Spotify's customized jQuery.  
+  
+I will add more when I find anything interesting in the future. If you are stuck somewhere, feel free to drop a Issuse post or create a thread in [Spicetify Spectrum](https://spectrum.chat/spicetify). Although my Javascript knowledge is really limited, I will try my best to answer.
+
+## How it works
+Spotify UI is HTML/CSS and runs inside Chromium Embedded Framework<sup>[[1]](https://www.quora.com/How-is-JavaScript-used-within-the-Spotify-desktop-application-Is-it-packaged-up-and-run-locally-only-retrieving-the-assets-as-and-when-needed-What-JavaScript-VM-is-used)</sup>. All CSS files controlling element attributes and interaction are packed in SPA files (they basically are ZIP).  
+
+These CSS files are extracted first then go through a preparation process that finds and replaces almost all colors with specific keywords.  
+
+When user applies his/her own colors scheme, all keywords are replaced with actual colors value, both in hex and RRR,GGG,BBB format. 
+
+After that, modded CSS and remaining files are transferred back to Spotify directory.
 
 ## Credit
 Thanks ![**actionless**](https://github.com/actionless) for his ![oomoxify](https://github.com/actionless/oomoxify/blob/master/oomoxify.sh) script that this skin is based on.
