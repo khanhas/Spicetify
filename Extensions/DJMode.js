@@ -10,29 +10,75 @@ if (!chrome.localStorage || !chrome.addToQueue || !chrome.libURI) {
     return;
 }
 
-const isDJModeOn = chrome.localStorage.get("DJMode") === "true";
+let DJSetting = JSON.parse(chrome.localStorage.get("DJMode"));
+if (!DJSetting || typeof(DJSetting) !== 'object') {
+    DJSetting = {
+        enabled: false,
+        hideControls: false,
+    }
+    chrome.localStorage.set("DJMode", JSON.stringify(DJSetting));
+}
 
-var menuEl = $("#profile-menu-container")
+var menuEl = $("#profile-menu-container");
 
 // Observing profile menu
 var menuObserver = new MutationObserver(() => {
     const innerMenu = menuEl.find(".GlueMenu");
     innerMenu.html(
-`<button class="GlueMenu__item${isDJModeOn ? " GlueMenu__item--checked" : ""}"
-tabindex="-1" id="DJModeToggle">DJ Mode</button>${innerMenu.html()}`)
+`<div 
+class="GlueMenu__item GlueMenu__item--has-submenu" 
+role="menuitem" 
+data-submenu="true" 
+tabindex="-1" 
+aria-haspopup="true" 
+aria-expanded="false">DJ Mode
+<div class="GlueMenu GlueMenu--submenu GlueMenu--submenu-left open" 
+    role="menu" 
+    tabindex="-1">
+    <button class="GlueMenu__item${DJSetting.enabled ? " GlueMenu__item--checked" : ""}" 
+        role="menuitem" 
+        data-submenu="false" 
+        tabindex="-1" id="DJModeToggle">Enabled</button>
+    <button class="GlueMenu__item${DJSetting.enabled && DJSetting.hideControls ? " GlueMenu__item--checked" : ""}" 
+        role="menuitem" 
+        data-submenu="false"
+        tabindex="-1" id="DJModeToggleControl">Hide controls</button>
+</div>
+</div>
+${innerMenu.html()}`)
     $("#DJModeToggle").on("click", () => {
-        chrome.localStorage.set("DJMode", `${!isDJModeOn}`)
-        document.location.reload()
+        DJSetting.enabled = !DJSetting.enabled;
+        chrome.localStorage.set("DJMode", JSON.stringify(DJSetting));
+        document.location.reload();
+    })
+    $("#DJModeToggleControl").on("click", () => {
+        DJSetting.hideControls = !DJSetting.hideControls;
+        showHideControl(DJSetting.hideControls)
+        chrome.localStorage.set("DJMode", JSON.stringify(DJSetting));
     })
 })
 
 menuObserver.observe(menuEl[0], {childList: true})
 
-if (!isDJModeOn) {
+if (!DJSetting.enabled) {
     // Do nothing when DJ Mode is off
     return;
 }
-    
+
+const playerControl = $(".player-controls-container");
+const extraControl = $(".extra-controls-container");
+
+function showHideControl(hide) {
+    if (hide) {
+        playerControl.hide();
+        extraControl.hide();
+    } else {
+        playerControl.show();
+        extraControl.show();
+    }
+}
+
+showHideControl(DJSetting.hideControls);
 
 function isValidURI(uri) {
     const uriType = chrome.libURI.from(uri).type;
