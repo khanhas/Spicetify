@@ -92,6 +92,9 @@ function addClickToQueue(button, uri) {
     button.on("click", function() {
         chrome.addToQueue(uri, () => {
             console.log("%s is added to queue", uri);
+            chrome.bridgeAPI.request("track_metadata", [uri], (e, p) => {
+                chrome.showNotification(`${p.name} - ${p.artists[0].name} is added to queue`)
+            })
         });
     })
 }
