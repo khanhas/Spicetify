@@ -1030,8 +1030,10 @@ Manifest.push({
 
 		--Leak track meta data, player state, current playlist to chrome.playerData
 		{'const metadata=data%.track%.metadata;', '%1chrome.playerData=data;', 1},
-		{'_localStorage2%.default%.get%(SETTINGS_KEY_AD%);', '%1chrome.localStorage=_localStorage2.default;', 1},
-
+		--Leak localStorage and showNotification
+		{'_localStorage2%.default%.get%(SETTINGS_KEY_AD%);', '%1chrome.localStorage=_localStorage2.default;chrome.showNotification = text => {_eventDispatcher2.default.dispatchEvent(new _event2.default(_event2.default.TYPES.SHOW_NOTIFICATION_BUBBLE, {i18n: text}))};', 1},
+		--Leak bridgeAPI 
+		{'BuddyList%.prototype%.setup=function%(%)%{', '%1chrome.bridgeAPI = _bridge;', 1},
 		--Leak audio data fetcher to chrome.getAudioData
 		{'PlayerHelper%.prototype%._player=null', table.concat({
 			'var uriToId=u=>{var t=u.match(/^spotify:track:(.*)/);if(!t||t.length<2)return false;else return t[1]};',
