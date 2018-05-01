@@ -1386,6 +1386,9 @@ end
 function App_ParseActivated()
 	local r = {}
 	local list = SKIN:GetVariable('ActivatedApps', '')
+	local appCount = 0
+	function r:length() return appCount end
+
 	if (list:len() <= 1) then
 		SKIN:Bang('!SetVariable', 'ActivatedApps', " ")
 		SKIN:Bang('!WriteKeyValue', 'Variables', 'ActivatedApps', " ")
@@ -1396,7 +1399,6 @@ function App_ParseActivated()
 		SKIN:Bang('!WriteKeyValue', 'Variables', 'ActivatedApps', list)
 	end
 
-	local appCount = 0
 	local needRewrite = false
 	for app in list:gmatch('(.-);') do
 		app = app:lower()
@@ -1418,8 +1420,6 @@ function App_ParseActivated()
 		SKIN:Bang('!SetVariable', 'ActivatedApps', newList)
 		SKIN:Bang('!WriteKeyValue', 'Variables', 'ActivatedApps', newList)
 	end
-
-	function r:length() return appCount end
 	return r
 end
 
