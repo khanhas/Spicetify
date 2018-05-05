@@ -139,9 +139,9 @@ function findActiveIframeAndChangeButtonIntent() {
         })
 
         if (DJSetting.hideControls) {
-            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"]').hide();
+            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"], [data-ta-id="page-header-button-more"], [data-ta-id="page-header-button-add"]').hide();
         } else {
-            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"]').show();
+            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"], [data-ta-id="page-header-button-more"], [data-ta-id="page-header-button-add"]').show();
         }
         
     }
@@ -173,9 +173,9 @@ function findActiveIframeAndChangeButtonIntent() {
         })
 
         if (DJSetting.hideControls) {
-            embeddedApp.find('[data-ta-id="play-button"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"]').hide();
+            embeddedApp.find('[data-ta-id="play-button"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"], [data-ta-id="ta-add-button"], [data-ta-id="ta-more-button"]').hide();
         } else {
-            embeddedApp.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"]').show();
+            embeddedApp.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"], [data-ta-id="ta-add-button"], [data-ta-id="ta-more-button"]').show();
         }
     }
 
