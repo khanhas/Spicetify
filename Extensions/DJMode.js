@@ -1,7 +1,7 @@
 // START METADATA
 // NAME: DJ Mode
 // AUTHOR: khanhas
-// DESCRIPTION: All Play buttons will add tracks to queue, instead of play.
+// DESCRIPTION: Queue only mode, Hide all controls. Toggles in Profile menu.
 // END METADATA
 (function DJMode(){
 
@@ -24,28 +24,40 @@ var menuEl = $("#profile-menu-container");
 // Observing profile menu
 var menuObserver = new MutationObserver(() => {
     const innerMenu = menuEl.find(".GlueMenu");
-    innerMenu.html(
+    innerMenu.prepend(
 `<div 
-class="GlueMenu__item GlueMenu__item--has-submenu" 
-role="menuitem" 
-data-submenu="true" 
-tabindex="-1" 
-aria-haspopup="true" 
-aria-expanded="false">DJ Mode
-<div class="GlueMenu GlueMenu--submenu GlueMenu--submenu-left open" 
-    role="menu" 
-    tabindex="-1">
-    <button class="GlueMenu__item${DJSetting.enabled ? " GlueMenu__item--checked" : ""}" 
-        role="menuitem" 
-        data-submenu="false" 
-        tabindex="-1" id="DJModeToggle">Enabled</button>
-    <button class="GlueMenu__item${DJSetting.enabled && DJSetting.hideControls ? " GlueMenu__item--checked" : ""}" 
-        role="menuitem" 
-        data-submenu="false"
-        tabindex="-1" id="DJModeToggleControl">Hide controls</button>
+    class="GlueMenu__item GlueMenu__item--has-submenu" 
+    role="menuitem" 
+    data-submenu="true" 
+    tabindex="-1" 
+    aria-haspopup="true" 
+    aria-expanded="false"
+    id="DJModeMenu">
+        DJ Mode
+    <div id="DJModeSubMenu" class="GlueMenu GlueMenu--submenu GlueMenu--submenu-left" 
+        role="menu" 
+        tabindex="-1">
+        <button class="GlueMenu__item${DJSetting.enabled ? " GlueMenu__item--checked" : ""}" 
+            role="menuitem" 
+            data-submenu="false" 
+            tabindex="-1" id="DJModeToggle">
+                Enabled
+        </button>
+        <button class="GlueMenu__item${DJSetting.enabled && DJSetting.hideControls ? " GlueMenu__item--checked" : ""}" 
+            role="menuitem" 
+            data-submenu="false"
+            tabindex="-1" id="DJModeToggleControl">
+                Hide controls
+        </button>
+    </div>
 </div>
-</div>
-${innerMenu.html()}`)
+`)
+    $("#DJModeMenu").on("mouseover", () => {
+        $("#DJModeSubMenu").addClass("open")
+    });
+    $("#DJModeMenu").on("mouseleave", () => {
+        $("#DJModeSubMenu").removeClass("open")
+    })
     $("#DJModeToggle").on("click", () => {
         DJSetting.enabled = !DJSetting.enabled;
         chrome.localStorage.set("DJMode", JSON.stringify(DJSetting));
@@ -91,9 +103,8 @@ function isValidURI(uri) {
 function addClickToQueue(button, uri) {
     button.on("click", function() {
         chrome.addToQueue(uri, () => {
-            console.log("%s is added to queue", uri);
             chrome.bridgeAPI.request("track_metadata", [uri], (e, p) => {
-                chrome.showNotification(`${p.name} - ${p.artists[0].name} is added to queue`)
+                chrome.showNotification(`${p.name} - ${p.artists[0].name} added to queue`)
             })
         });
     })
@@ -127,8 +138,12 @@ function findActiveIframeAndChangeButtonIntent() {
             addClickToQueue(playButton, songURI)
         })
 
-        doc.find("").each(function() {
-        })
+        if (DJSetting.hideControls) {
+            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"]').hide();
+        } else {
+            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"]').show();
+        }
+        
     }
     
     var embeddedApp = $(".embedded-app.active");
@@ -156,7 +171,12 @@ function findActiveIframeAndChangeButtonIntent() {
                 addClickToQueue(newButton, songURI);
             });
         })
-        
+
+        if (DJSetting.hideControls) {
+            embeddedApp.find('[data-ta-id="play-button"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"]').hide();
+        } else {
+            embeddedApp.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"]').show();
+        }
     }
 
 }
