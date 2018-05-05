@@ -1,7 +1,7 @@
 <!-- 
 // START METADATA
 // NAME: Reddit
-// VERSION: 0.1
+// VERSION: 0.2
 // AUTHOR: khanhas
 // DESCRIPTION: Fetch playlists from subreddit.
 // END METADATA
@@ -29,6 +29,7 @@
             <form id="subreddit-input-form">
               <input class="form-control" type="text" id="subreddit-input" maxlength="100" placeholder="Subreddit name" data-bind="reddit-form-placeholder"></input>
             </form>
+            <div id="autocomplete"></div>
             <div id="reddit-subreddit-list"></div>
           </div>
         </div>
@@ -53,6 +54,47 @@
   <div id="reddit-youtube">
     <div class="modal-backdrop" data-interaction-intent="youtube-close"></div>
     <div id="youtube-container" class="popover"></div>
+  </div>
+  <div id="reddit-sortby-context-menu" class="context-menu-container" style="display: none;">
+    <div class="context-menu" style="z-index:2; opacity: 1; display: inline-block; height: auto; width: auto;">
+        <div class="item" data-bind="hot">
+          <span class="text">Hot</span>
+        </div>
+        <div class="item" data-bind="new">
+          <span class="text">New</span>
+        </div>
+        <div class="item" data-bind="top">
+          <span class="text">Top</span>
+        </div>
+        <div class="item" data-bind="rising">
+          <span class="text">Rising</span>
+        </div>
+        <div class="item" data-bind="controversial">
+          <span class="text">Controversial</span>
+        </div>
+    </div>
+  </div>
+  <div id="reddit-sorttime-context-menu" class="context-menu-container" style="display: none;">
+    <div class="context-menu" style="z-index:2; opacity: 1; display: inline-block; height: auto; width: auto;">
+        <div class="item" data-bind="hour">
+          <span class="text">Past Hour</span>
+        </div>
+        <div class="item" data-bind="day">
+          <span class="text">Past Day</span>
+        </div>
+        <div class="item" data-bind="week">
+          <span class="text">Past Week</span>
+        </div>
+        <div class="item" data-bind="month">
+          <span class="text">Past Month</span>
+        </div>
+        <div class="item" data-bind="year">
+          <span class="text">Past Year</span>
+        </div>
+        <div class="item" data-bind="all">
+          <span class="text">Of All time</span>
+      </div>
+    </div>
   </div>
   <!-- "init.js" is served by the desktop client and provides the "window.__spotify" object. -->
   <script src="init.js"></script>
