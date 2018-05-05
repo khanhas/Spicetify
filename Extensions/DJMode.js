@@ -173,9 +173,9 @@ function findActiveIframeAndChangeButtonIntent() {
         })
 
         if (DJSetting.hideControls) {
-            embeddedApp.find('[data-ta-id="play-button"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"]').hide();
+            embeddedApp.find('[data-ta-id="play-button"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"], [data-ta-id="ta-add-button"], [data-ta-id="ta-more-button"]').hide();
         } else {
-            embeddedApp.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"]').show();
+            embeddedApp.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"], [data-ta-id="ta-add-button"], [data-ta-id="ta-more-button"]').show();
         }
     }
 
