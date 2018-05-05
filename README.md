@@ -11,7 +11,7 @@
 
 **Note:** Only Spotify normal version is supported. Windows Store version is under a write permission required folder so I can't make it to work. Normal Spotify installer can be downloaded [here](https://download.scdn.co/SpotifySetup.exe).
 
-![Demo1](https://i.imgur.com/xPh0bI3.png)
+![Demo1](https://i.imgur.com/O6IRzlV.png)
 
 ![Demo2](https://i.imgur.com/eiAPF6j.png)
 
@@ -148,6 +148,7 @@ Name | Description
 `chrome.playerData` | Return current track data like uri, track name, artist, album, cover image uri, ...
 `chrome.queue` | Return current queuing tracks and history.
 `chrome.cosmosAPI` | Spotify cosmos API
+`chrome.bridgeAPI` | Spotify Bridge API
 
 ### Functions:
 Name | Param | Description
@@ -155,6 +156,7 @@ Name | Param | Description
 `chrome.getAudioData` | (*callback*[, *uri*]) | Return current song audio data to *payload* and call *callback*(*payload*). You can specify a song *uri* to get that song audio data instead of current one.
 `chrome.addToQueue` | (*uri*, *callback*) | Add *uri* to queue. Only track, album, espisode URI types are valid. 
 `chrome.removeFromQueue` | (*uri*, *callback*) | Remove *uri* from queue. Only track, album, espisode URI types are valid. 
+`chrome.showNotification` | (*text*) | Show *text* as a notification bubble in bottom of client.
 
 ## Apps
 Inject custom apps to Spotify and access them in left sidebar.  
