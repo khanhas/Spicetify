@@ -79,14 +79,17 @@ if (!DJSetting.enabled) {
 
 const playerControl = $(".player-controls-container");
 const extraControl = $(".extra-controls-container");
+const nowPlayingAddButton = $(".view-player .nowplaying-add-button");
 
 function showHideControl(hide) {
     if (hide) {
         playerControl.hide();
         extraControl.hide();
+		nowPlayingAddButton.hide();
     } else {
         playerControl.show();
         extraControl.show();
+		nowPlayingAddButton.show();
     }
 }
 
@@ -139,9 +142,9 @@ function findActiveIframeAndChangeButtonIntent() {
         })
 
         if (DJSetting.hideControls) {
-            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"], [data-ta-id="page-header-button-more"], [data-ta-id="page-header-button-add"]').hide();
+            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"], [data-ta-id="page-header-button-more"], [data-ta-id="page-header-button-add"], [data-button="add-recommendation"], [data-button="add"], [data-button="contextmenu"]').hide();
         } else {
-            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"], [data-ta-id="page-header-button-more"], [data-ta-id="page-header-button-add"]').show();
+            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"], [data-ta-id="page-header-button-more"], [data-ta-id="page-header-button-add"], [data-button="add-recommendation"], [data-button="add"], [data-button="contextmenu"]').show();
         }
         
     }
