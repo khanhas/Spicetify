@@ -181,6 +181,6 @@ function findActiveIframeAndChangeButtonIntent() {
 
 }
 
-setInterval(findActiveIframeAndChangeButtonIntent, 1000)
+setInterval(findActiveIframeAndChangeButtonIntent, 0)
 
 })()
