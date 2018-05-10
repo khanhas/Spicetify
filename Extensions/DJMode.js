@@ -79,14 +79,43 @@ if (!DJSetting.enabled) {
 
 const playerControl = $(".player-controls-container");
 const extraControl = $(".extra-controls-container");
+const nowPlayingAddButton = $(".view-player .nowplaying-add-button");
+
+const IFRAME_HIDE_ELEMENT_LIST = [
+    '[data-ta-id="card-button-play"]',
+    '[data-ta-id="card-button-add"]',
+    '[data-ta-id="card-button-context-menu"]',
+    'div.glue-page-header__buttons',
+    'th.tl-more',
+    '.tl-cell.tl-more',
+    'th.tl-save',
+    '.tl-cell.tl-save',
+    'th.tl-feedback',
+    '.tl-cell.tl-feedback',
+    'th.tl-more',
+    '.tl-cell.tl-more',
+].join(",") + '{display: none !important}';
+
+const EMBEDDED_HIDE_ELEMENT_LIST = [
+    'div.GlueHeader__buttons',
+    '[data-ta-id="play-button"]',
+    '[data-ta-id="card-button-add"]',
+    '[data-ta-id="card-button-context-menu"]',
+    '[data-ta-id="play-button"]',
+    '[data-ta-id="ta-table-cell-add"]',
+    '[data-ta-id="ta-table-cell-more"]',
+    'th[aria-label=""]'
+].join(",") + '{display: none !important}';
 
 function showHideControl(hide) {
     if (hide) {
         playerControl.hide();
         extraControl.hide();
+        nowPlayingAddButton.hide();
     } else {
         playerControl.show();
         extraControl.show();
+        nowPlayingAddButton.show();
     }
 }
 
@@ -139,11 +168,10 @@ function findActiveIframeAndChangeButtonIntent() {
         })
 
         if (DJSetting.hideControls) {
-            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"], [data-ta-id="page-header-button-more"], [data-ta-id="page-header-button-add"]').hide();
+            addCSS(doc, "IframeDJModeHideControl", IFRAME_HIDE_ELEMENT_LIST);
         } else {
-            doc.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="page-header-button-play"], [data-ta-id="page-header-button-more"], [data-ta-id="page-header-button-add"]').show();
+            removeCSS(doc, "IframeDJModeHideControl")
         }
-        
     }
     
     var embeddedApp = $(".embedded-app.active");
@@ -173,14 +201,28 @@ function findActiveIframeAndChangeButtonIntent() {
         })
 
         if (DJSetting.hideControls) {
-            embeddedApp.find('[data-ta-id="play-button"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"], [data-ta-id="ta-add-button"], [data-ta-id="ta-more-button"]').hide();
+            addCSS($(document), "EmbeddedDJModeHideControl", EMBEDDED_HIDE_ELEMENT_LIST);
         } else {
-            embeddedApp.find('[data-ta-id="card-button-play"], [data-ta-id="card-button-add"], [data-ta-id="card-button-context-menu"], [data-ta-id="play-button"], [data-ta-id="ta-add-button"], [data-ta-id="ta-more-button"]').show();
+            removeCSS($(document), "EmbeddedDJModeHideControl")
         }
     }
 
 }
 
-setInterval(findActiveIframeAndChangeButtonIntent, 1000)
+function addCSS(doc, id, text) {
+    if (doc.find("head #" + id).length == 0) {
+        const style = $(`<style/>`, { id, text })
+        doc.find("head").append(style);
+    }
+}
 
+function removeCSS(doc, id) {
+    const found = doc.find("head #" + id);
+    if (found.length > 0) {
+        found.remove();
+    }
+}
+
+setInterval(findActiveIframeAndChangeButtonIntent, 1000);
 })()
+    
