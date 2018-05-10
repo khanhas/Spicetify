@@ -821,8 +821,10 @@ function ModInjectExtension(packName, extensionFolder, extensionFile)
 		local extensionData = extension:read('*a')
 		extension:close()
 		extension = io.open(SKIN:ReplaceVariables("%appdata%\\Spotify\\Apps\\" .. packName .. "\\" .. extensionFile), 'w+')
-		extension:write(extensionData)
-		extension:close()
+		if (extension) then
+			extension:write(extensionData)
+			extension:close()
+		end
 	end
 end
 
@@ -989,6 +991,7 @@ Manifest.push({
 	ModInjectExtension('zlink', "#@#JavascriptInject\\", 'spicetifyWebSocket.js')
 	ModInjectExtension('zlink', "#@#JavascriptInject\\", 'jquery-3.3.1.min.js')
 
+	UpdateStatus('Leaking useful functions, objects')
 	ModJS('zlink', 'main.bundle', {
 		{'PlayerUI%.prototype%.setup=function%(%){', table.concat({'%1',
 			'chrome.player={};',
@@ -1040,11 +1043,10 @@ Manifest.push({
 			'chrome.getAudioData=(callback, uri)=>{uri=uri||chrome.playerData.track.uri;if(typeof(callback)!=="function"){console.log("chrome.getAudioData: callback has to be a function");return;};var id=uriToId(uri);if(id)cosmos.resolver.get(`hm://audio-attributes/v1/audio-analysis/${id}`, (e,p)=>{if(e){console.log(e);callback(null);return;}if(p._status===200&&p._body&&p._body!==""){var data=JSON.parse(p._body);data.uri=uri;callback(data);}else callback(null)})};',
 			'new Player(cosmos.resolver,"spotify:internal:queue","queue","1.0.0").subscribeToQueue((e,r)=>{if(e){console.log(e);return;}chrome.queue=r.getJSONBody();});',
 			'%1'}), 1},
-		{'(class Queue extends BaseAction.-)%}', table.concat({'%1;',
+		{'const Adaptor=function%(bridge,cosmos%)%{', table.concat({'%1',
 			'chrome.libURI = liburi;',
-			'chrome.addToQueue=(uri,callback)=>{uri=liburi.from(uri);if(uri.type===liburi.Type.SHOW||uri.type===liburi.Type.ALBUM){this._adaptor.getAlbumTracks(uri,(err,tracks)=>{if(err){console.log("chrome.addToQueue",err);return};this._adaptor.queueTracks(tracks,callback)})}else if(uri.type===liburi.Type.TRACK||uri.type===liburi.Type.EPISODE){this._adaptor.queueTracks([uri],callback)}else{console.log("chrome.addToQueue: Only Track and Album URIs are accepted")}};',
-			'chrome.removeFromQueue=(uri,callback)=>{if(chrome.queue){var indices=[],uriObj=liburi.from(uri);if(uriObj.type===liburi.Type.ALBUM){this._adaptor.getAlbumTracks(uriObj,(err,tracks)=>{if(err){console.log(err);return}tracks.forEach(t=>chrome.queue.next_tracks.forEach((nt,index)=>t==nt.uri&&indices.push(index)))})}else if(uriObj.type===liburi.Type.TRACK||uriObj.type===liburi.Type.EPISODE){chrome.queue.next_tracks.forEach((track,index)=>track.uri==uri&&indices.push(index))}else{console.log("chrome.removeFromQueue: Only Album, Track and Episode URIs are accepted")}indices=indices.reduce((a,b)=>{if(a.indexOf(b)<0){a.push(b)}return a},[]);this._adaptor.removeTracksFromQueue(indices,callback)}};',
-			'};'
+			'chrome.addToQueue=(uri,callback)=>{uri=liburi.from(uri);if(uri.type===liburi.Type.ALBUM){this.getAlbumTracks(uri,(err,tracks)=>{if(err){console.log("chrome.addToQueue",err);return};this.queueTracks(tracks,callback)})}else if(uri.type===liburi.Type.TRACK||uri.type===liburi.Type.EPISODE){this.queueTracks([uri],callback)}else{console.log("chrome.addToQueue: Only Track and Album URIs are accepted")}};',
+			'chrome.removeFromQueue=(uri,callback)=>{if(chrome.queue){var indices=[],uriObj=liburi.from(uri);if(uriObj.type===liburi.Type.ALBUM){this.getAlbumTracks(uriObj,(err,tracks)=>{if(err){console.log(err);return}tracks.forEach(t=>chrome.queue.next_tracks.forEach((nt,index)=>t==nt.uri&&indices.push(index)))})}else if(uriObj.type===liburi.Type.TRACK||uriObj.type===liburi.Type.EPISODE){chrome.queue.next_tracks.forEach((track,index)=>track.uri==uri&&indices.push(index))}else{console.log("chrome.removeFromQueue: Only Album, Track and Episode URIs are accepted")}indices=indices.reduce((a,b)=>{if(a.indexOf(b)<0){a.push(b)}return a},[]);this.removeTracksFromQueue(indices,callback)}};',
 		}), 1},
 		--Register song change event
 		{'this%._uri=track%.uri,this%._trackMetadata=track%.metadata', '%1,chrome.player&&chrome.player.dispatchEvent(new Event("songchange"))', 1},
