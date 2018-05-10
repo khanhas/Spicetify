@@ -85,11 +85,11 @@ function showHideControl(hide) {
     if (hide) {
         playerControl.hide();
         extraControl.hide();
-		nowPlayingAddButton.hide();
+        nowPlayingAddButton.hide();
     } else {
         playerControl.show();
         extraControl.show();
-		nowPlayingAddButton.show();
+        nowPlayingAddButton.show();
     }
 }
 
