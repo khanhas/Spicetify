@@ -831,15 +831,14 @@
         if (sort.match(/top|constroversial/) && time) {
           url += `&t=${time}`
         }
-        console.log(url)
+
         fetch(url)
         .then(response => response.json())
-        .then(data => 
-          {console.log(data);return getSubredditMetadata(
+        .then(data => getSubredditMetadata(
             playlists, 
             postMapper(data.data.children), 
             data.data.after
-          )}
+          )
         );
       }
 
@@ -1184,15 +1183,13 @@
 
   function args(state = {}, { type, args }) {
     let appName = __spotify.app_uri.split(':')[2]
-    let section;
+    const subs = subreddits();
+    let section = subs[0];
     let sort = options().sortBy;
     let time = options().sortTime;
-    if (args){
-      const subs = subreddits();
+    if (args) {
       if (args.length > 0) {
-        if (args[0] && subs.indexOf(args[0]) == -1) {
-          section = subs[0]
-        } else {
+        if (subs.indexOf(args[0]) !== -1) {
           section = args[0];
         }
 
@@ -1203,10 +1200,8 @@
         if (args[2]) {
           time = args[2];
         }
-      } else {
-        section = subs[0];
       }
-    } 
+    }
     return type === 'application-arguments-updated' ? { appName, section, sort, time } : state;
   }
   
