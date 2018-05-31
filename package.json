@@ -2,7 +2,6 @@
   "name": "spicetify",
   "version": "1.6.3",
   "description": "Spice up Spotify client",
-  "main": "index.js",
   "repository": "https://github.com/khanhas/Spicetify.git",
   "author": "Nguyen Xuan Khanh <xuankhanh963@gmail.com>",
   "license": "GPL",
@@ -12,7 +11,7 @@
   "scripts": {
     "format": "prettier --tab-width 4 --arrow-parens always --trailing-comma es5 --write \"Extensions/*.js\"",
     "clean:robo": "cd ./@Resources && del robocopy_copyapp_log.txt robocopy_transfer_log.txt robocopy_transfer_raw_log.txt console.log",
-    "clean:yarn": "del yarn.lock yarn-error.log && rmdir node_modules /S",
+    "clean:yarn": "del yarn.lock yarn-error.log && rmdir node_modules /S /Q",
     "clean:all": "yarn clean:robo && yarn clean:all"
   }
 }
