@@ -192,21 +192,17 @@ function Initialize()
 		f:write('')
 		f:close()
 	end
-
+	DevTool_Button()
 end
 
 function ParseCoreSetting()
 	injectCSS = SKIN:GetVariable("Inject_CSS") == '1'
 	theme = SKIN:GetVariable("Replace_Colors") == '1'
-	devTool = SKIN:GetVariable("DevTool") == '1'
 	radio = SKIN:GetVariable("Radio") == '1'
 	home = SKIN:GetVariable("Home") == '1'
-	lyric = SKIN:GetVariable("Lyric") == '1'
 	sentry = SKIN:GetVariable("DisableSentry") == '1'
 	lyric_alwaysShow = SKIN:GetVariable("LyricAlwaysShow") == '1'
 	lyric_noSync = SKIN:GetVariable("LyricForceNoSync") == '1'
-	vis_highFramerate = SKIN:GetVariable("VisualizationHighFramerate") == '1'
-	vis_customVis = SKIN:GetVariable("CustomVisualization") == '1'
 	logging = SKIN:GetVariable("DisableUILogging") == '1'
 end
 
@@ -446,13 +442,14 @@ function Unzip()
 	n = backupName:GetStringValue()
 	if not n or n == '' then
 		Duplicate()
+		nx = nil
 		return
 	end
 	nX = n:gsub('%.spa','')
 	UpdateStatus("Unzipping " .. n)
 	UpdatePercent()
 
-	SKIN:Bang('!SetOption', 'Unzip', 'Parameter', 'x "Backup\\' .. n .. '" -oExtracted\\Raw\\' .. nX .. '\\ -r')
+	SKIN:Bang('!SetOption', 'Unzip', 'Parameter', '"7z.exe x "Backup\\' .. n .. '" -oExtracted\\Raw\\' .. nX .. '\\ -r"')
 
 	SKIN:Bang('!UpdateMeasure', 'Unzip')
 	SKIN:Bang('!CommandMeasure', 'Unzip', 'Run')
@@ -599,11 +596,9 @@ function StartMod()
 			+ (devTool and 1 or 0)
 			+ (radio and 1 or 0)
 			+ (home and 1 or 0)
-			+ (lyric and 1 or 0)
 			+ (lyric_alwaysShow and 1 or 0)
 			+ (lyric_noSync and 1 or 0)
 			+ (vis_highFramerate and 1 or 0)
-			+ (vis_customVis and 1 or 0)
 	UpdatePercent(totalApply)
 	UpdatePercent()
 	CheckSpotifyFolder()
@@ -824,6 +819,8 @@ function ModInjectExtension(packName, extensionFolder, extensionFile)
 		if (extension) then
 			extension:write(extensionData)
 			extension:close()
+		else
+			print("Cannot inject extension" .. extensionFile .. ". Check %appdata%\\Spotify\\Apps\\" .. packName .. " folder to see if it exists.")
 		end
 	end
 end
@@ -901,34 +898,15 @@ function Finishing()
 		UpdatePercent()
 	end
 
-	local modOptions = ''
-	if (lyric and lyric_alwaysShow) then
-		UpdateStatus('Enabling Lyrics + button always show')
-		ModJS('lyrics', 'bundle', {
-			{'const anyAbLyricsEnabled = ', '%1true || ', 1}
-		})
-		ModJS('zlink', 'main.bundle', {
-			{'(lyricsEnabled%()trackHasLyrics&&%(.-%)', '%1true', 1}
-		})
-		modOptions = 'trackControllerOpts.noService = false;\n'
-		UpdatePercent()
-	elseif (lyric) then
-		UpdateStatus('Enabling Lyrics')
-		ModJS('lyrics', 'bundle', {
-			{'const anyAbLyricsEnabled = ', '%1true || ', 1}
-		})
-		ModJS('zlink', 'main.bundle', {
-			{'(lyricsEnabled%(trackHasLyrics)&&%(.-%)', '%1', 1}
-		})
-		modOptions = 'trackControllerOpts.noService = false;\n'
-		UpdatePercent()
-	elseif (lyric_alwaysShow) then
+	if (lyric_alwaysShow) then
 		UpdateStatus('Enabling Always show lyrics button')
 		ModJS('zlink', 'main.bundle', {
 			{'(lyricsEnabled%()trackHasLyrics&&%(.-%)', '%1true', 1}
 		})
 		UpdatePercent()
 	end
+
+	local modOptions = ''
 
 	if (vis_highFramerate) then
 		modOptions = modOptions .. 'trackControllerOpts.highVisualizationFrameRate = true;\n'
@@ -943,44 +921,6 @@ function Finishing()
 		ModJS('lyrics', 'bundle', {
 			{'trackController%.init%(trackControllerOpts%)', modOptions .. '%1', 1}
 		})
-	end
-
-	if (vis_customVis) then
-		UpdateStatus('Adding custom visualization')
-		ModJS('lyrics', 'bundle', {
-			{'module%.exports = Manifest;.-%},%{', [[
-Manifest.push({
-  id: 'cross_square',
-  name: 'Rotating Square',
-  reactive: false,
-  Constructor: function() {
-    const GridVisualization = require('./index');
-    const Polygon = require('../../common/geom/polygon');
-    function DotsGrid() {
-      GridVisualization.call(this, GridVisualization.CROSS, Polygon.Square);
-    }
-    DotsGrid.prototype = Object.create(GridVisualization.prototype);
-    return new DotsGrid();
-  }
-});
-Manifest.push({
-  id: 'cross_triangle',
-  name: 'Rotating Triangle',
-  reactive: false,
-  Constructor: function() {
-    const GridVisualization = require('./index');
-    const Polygon = require('../../common/geom/polygon');
-    function DotsGrid() {
-      GridVisualization.call(this, GridVisualization.CROSS, Polygon.Triangle);
-    }
-    DotsGrid.prototype = Object.create(GridVisualization.prototype);
-    return new DotsGrid();
-  }
-});
-
-%1"../../common/geom/polygon":302,"./index":322,]], 1}
-		})
-		UpdatePercent()
 	end
 
 	UpdateStatus('Injecting a websocket and jquery 3.3.1')
@@ -1035,7 +975,7 @@ Manifest.push({
 		{'const metadata=data%.track%.metadata;', '%1chrome.playerData=data;', 1},
 		--Leak localStorage and showNotification
 		{'_localStorage2%.default%.get%(SETTINGS_KEY_AD%);', '%1chrome.localStorage=_localStorage2.default;chrome.showNotification = text => {_eventDispatcher2.default.dispatchEvent(new _event2.default(_event2.default.TYPES.SHOW_NOTIFICATION_BUBBLE, {i18n: text}))};', 1},
-		--Leak bridgeAPI 
+		--Leak bridgeAPI
 		{'BuddyList%.prototype%.setup=function%(%)%{', '%1chrome.bridgeAPI = _bridge;', 1},
 		--Leak audio data fetcher to chrome.getAudioData
 		{'PlayerHelper%.prototype%._player=null', table.concat({
@@ -1045,7 +985,7 @@ Manifest.push({
 			'%1'}), 1},
 		{'const Adaptor=function%(bridge,cosmos%)%{', table.concat({'%1',
 			'chrome.libURI = liburi;',
-			'chrome.addToQueue=(uri,callback)=>{uri=liburi.from(uri);if(uri.type===liburi.Type.ALBUM){this.getAlbumTracks(uri,(err,tracks)=>{if(err){console.log("chrome.addToQueue",err);return};this.queueTracks(tracks,callback)})}else if(uri.type===liburi.Type.TRACK||uri.type===liburi.Type.EPISODE){this.queueTracks([uri],callback)}else{console.log("chrome.addToQueue: Only Track and Album URIs are accepted")}};',
+			'chrome.addToQueue=(uri,callback)=>{uri=liburi.from(uri);if(uri.type===liburi.Type.ALBUM){this.getAlbumTracks(uri,(err,tracks)=>{if(err){console.log("chrome.addToQueue",err);return};this.queueTracks(tracks,callback)})}else if(uri.type===liburi.Type.TRACK||uri.type===liburi.Type.EPISODE){this.queueTracks([uri],callback)}else{console.log("chrome.addToQueue: Only Track, Album, Episode URIs are accepted")}};',
 			'chrome.removeFromQueue=(uri,callback)=>{if(chrome.queue){var indices=[],uriObj=liburi.from(uri);if(uriObj.type===liburi.Type.ALBUM){this.getAlbumTracks(uriObj,(err,tracks)=>{if(err){console.log(err);return}tracks.forEach(t=>chrome.queue.next_tracks.forEach((nt,index)=>t==nt.uri&&indices.push(index)))})}else if(uriObj.type===liburi.Type.TRACK||uriObj.type===liburi.Type.EPISODE){chrome.queue.next_tracks.forEach((track,index)=>track.uri==uri&&indices.push(index))}else{console.log("chrome.removeFromQueue: Only Album, Track and Episode URIs are accepted")}indices=indices.reduce((a,b)=>{if(a.indexOf(b)<0){a.push(b)}return a},[]);this.removeTracksFromQueue(indices,callback)}};',
 		}), 1},
 		--Register song change event
@@ -1070,8 +1010,8 @@ Manifest.push({
 		end
 	end
 
-	actApp = App_ParseActivated()
-	if (actApp:length() > 0) then
+	actApp, actAppCount = App_ParseActivated()
+	if (actAppCount > 0) then
 		App_CopyRountine(1)
 	else
 		Succeeded()
@@ -1391,7 +1331,6 @@ function App_ParseActivated()
 	local r = {}
 	local list = SKIN:GetVariable('ActivatedApps', '')
 	local appCount = 0
-	function r:length() return appCount end
 
 	if (list:len() <= 1) then
 		SKIN:Bang('!SetVariable', 'ActivatedApps', " ")
@@ -1424,7 +1363,7 @@ function App_ParseActivated()
 		SKIN:Bang('!SetVariable', 'ActivatedApps', newList)
 		SKIN:Bang('!WriteKeyValue', 'Variables', 'ActivatedApps', newList)
 	end
-	return r
+	return r, appCount
 end
 
 function App_DrawPage()
@@ -1592,7 +1531,7 @@ end
 
 function App_Update(index)
 	local file = appTable[index].file
-	
+
 	App_UpdateManifest(file)
 
 	SKIN:Bang('!SetOption', 'CopyApp', 'Parameter', table.concat({
@@ -1646,5 +1585,58 @@ function App_UpdateManifest(file)
 		manifest = io.open(path, 'w+')
 		manifest:write(data)
 		manifest:close()
+	end
+end
+
+function DevTool_Button()
+	local prefsFilePath = SKIN:ReplaceVariables("%appdata%\\Spotify\\prefs")
+	local f = io.open(prefsFilePath, "r")
+	if (f) then
+		local data = f:read("*a")
+		f:close()
+		local key, value = data:match("(app%.enable%-developer%-mode).-(%w+)")
+		if (key and value == "true") then
+			SKIN:Bang("!SetOption", "DevToolText", "Text", "[\\xf14a] Developer mode")
+			SKIN:Bang("!SetOption", "DevToolText", "LeftMouseUpAction", '!CommandMeasure Script "DevTool_Toggle(false)"')
+		else
+			SKIN:Bang("!SetOption", "DevToolText", "Text", "[\\xf0c8] Developer mode")
+			SKIN:Bang("!SetOption", "DevToolText", "LeftMouseUpAction", '!CommandMeasure Script "DevTool_Toggle(true)"')
+		end
+	else
+		SKIN:Bang("!SetOption", "DevTool", "MouseOverAction", "[!ShowMeterGroup DevToolTip][!Redraw]")
+		SKIN:Bang("!SetOption", "DevTool", "MouseLeaveAction", "[!HideMeterGroup DevToolTip][!Redraw]")
+		SKIN:Bang("!SetOption", "DevTool", "StrokeColor", "Stroke Color 909090")
+		SKIN:Bang("!SetOption", "DevToolText", "FontColor", "909090")
+		SKIN:Bang("!SetOption", "DevToolTipText", "Text", "%appdata%\\Spotify\\prefs file is not found. Please make one or reinstall Spotify, then refresh Spicetify.")
+		SKIN:Bang("!UpdateMeter", "DevTool")
+		SKIN:Bang("!UpdateMeter", "DevToolTipText")
+	end
+	SKIN:Bang("!UpdateMeter", "DevToolText")
+	SKIN:Bang("!Redraw")
+end
+
+function DevTool_Toggle(enable)
+	local prefsFilePath = SKIN:ReplaceVariables("%appdata%\\Spotify\\prefs")
+	local f = io.open(prefsFilePath, "r")
+	if (f) then
+		local data = f:read("*a")
+		f:close()
+		local key = data:match("(app%.enable%-developer%-mode).-%w+")
+		if (key) then
+			data = data:gsub("(app%.enable%-developer%-mode).-%w+", "%1=" .. (enable and "true" or "false"), 1)
+		else
+			data = data + "\napp.enable-developer-mode=" .. (enable and "true" or "false") .. "\n"
+		end
+		f = io.open(prefsFilePath, "w")
+		if (f) then
+			f:write(data)
+			f:close()
+			DevTool_Button()
+			SKIN:Bang('["#@#AutoRestart.exe"]')
+		else
+			UpdateStatus("Cannot write to file %appdata%\\Spotify\\prefs.", "warn")
+		end
+	else
+		UpdateStatus("%appdata%\\Spotify\\prefs file is not found. Please make one or reinstall Spotify.", "warn")
 	end
 end
