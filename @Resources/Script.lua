@@ -1204,7 +1204,7 @@ end
 function Extension_ShowOption(index, meterIndex)
 	SKIN:Bang('!ShowMeterGroup', 'ExtensionOption')
 	SKIN:Bang('!SetOption', 'ExtensionOptionOpen', 'LeftMouseUpAction', 
-		'#ROOTCONFIGPATH#Extensions\\' .. extensionTable[index].file)
+		'["#ROOTCONFIGPATH#Extensions\\' .. extensionTable[index].file .. '"]')
 
 		SKIN:Bang('!SetOption', 'ExtensionOptionUpdate', 'LeftMouseUpAction', 
 		'!CommandMeasure Script "Extension_Update(' .. index .. ')"')
