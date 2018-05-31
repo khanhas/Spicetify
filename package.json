@@ -1,0 +1,15 @@
+{
+  "name": "spicetify",
+  "version": "1.6.3",
+  "description": "Spice up Spotify client",
+  "main": "index.js",
+  "repository": "https://github.com/khanhas/Spicetify.git",
+  "author": "Nguyen Xuan Khanh <xuankhanh963@gmail.com>",
+  "license": "GPL",
+  "dependencies": {
+    "prettier": "^1.13.3"
+  },
+  "scripts": {
+    "format": "prettier --tab-width 4 --arrow-parens always --trailing-comma es5 --write \"Extensions/*.js\""
+  }
+}
