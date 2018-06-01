@@ -1335,7 +1335,7 @@ function App_ParseActivated()
 	if (list:len() <= 1) then
 		SKIN:Bang('!SetVariable', 'ActivatedApps', " ")
 		SKIN:Bang('!WriteKeyValue', 'Variables', 'ActivatedApps', " ")
-		return r
+		return r, 0
 	elseif (list:sub(list:len()) ~= ';') then
 		list = list .. ';'
 		SKIN:Bang('!SetVariable', 'ActivatedApps', list)
