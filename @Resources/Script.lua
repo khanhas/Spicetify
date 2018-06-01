@@ -1625,7 +1625,7 @@ function DevTool_Toggle(enable)
 		if (key) then
 			data = data:gsub("(app%.enable%-developer%-mode).-%w+", "%1=" .. (enable and "true" or "false"), 1)
 		else
-			data = data + "\napp.enable-developer-mode=" .. (enable and "true" or "false") .. "\n"
+			data = data .. "\napp.enable-developer-mode=" .. (enable and "true" or "false") .. "\n"
 		end
 		f = io.open(prefsFilePath, "w")
 		if (f) then
