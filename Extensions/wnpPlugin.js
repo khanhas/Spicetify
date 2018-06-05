@@ -431,7 +431,7 @@ o888ooooood8       `8'       o888ooooood8 o8o        `8      o888o     8""88888P
                     //+7 because "volume " is 7 chars
                     volume =
                         parseInt(
-                            volume.substring(volume.indexOf("volume ") + 7)
+                            volume.substring(volume.indexOf("volume ") + 10)
                         ) / 100;
                     musicEvents.volume(volume);
                 } else if (
@@ -455,10 +455,15 @@ o888ooooood8       `8'       o888ooooood8 o8o        `8      o888o     8""88888P
                 ) {
                     musicEvents.toggleThumbsDown();
                 } else if (
-                    event.data.toLowerCase() == "rating " &&
+                    event.data.toLowerCase().includes("setrating ") &&
                     musicEvents.rating !== null
                 ) {
-                    musicEvents.rating();
+                    let star = event.data.toLowerCase();
+                    star =
+                        parseInt(
+                            star.substring(star.indexOf("setrating ") + 10)
+                        );
+                    musicEvents.rating(star);
                 }
             }
         } catch (e) {
@@ -604,15 +609,22 @@ oo     .d8P  888       o      888       `88.    .8'   888
             return chrome.player.getVolume();
         };
         spotifyInfoHandler.rating = function() {
-            if (
-                document
-                    .getElementsByClassName("view-player")[0]
-                    .getElementsByClassName("nowplaying-add-button")[0]
-                    .getAttribute("data-interaction-intent") == "remove"
-            ) {
-                return 5;
+            const heart = document.querySelector('[data-interaction-target="heart-button"]');
+            const isHeartAvailable = heart.style.display !== "none";
+            if (isHeartAvailable) {
+                if (heart.classList.contains("active")) {
+                    return 5;
+                } else {
+                    return 0;
+                }
+            } else {
+                const add = document.querySelector('[data-button="add"]')
+                if (add.attributes["data-interaction-intent"].value == "remove") {
+                    return 5;
+                } else {
+                    return 0;
+                }
             }
-            return 0;
         };
         spotifyInfoHandler.repeat = function() {
             return chrome.player.getRepeat();
@@ -656,24 +668,21 @@ oo     .d8P  888       o      888       `88.    .8'   888
             chrome.player.thumbDown();
         };
         spotifyEventHandler.rating = function(rating) {
-            let addButton = document
-                .getElementsByClassName("view-player")[0]
-                .getElementsByClassName("nowplaying-add-button");
-            if (rating > 3) {
-                if (
-                    addButton.length > 0 &&
-                    addButton[0].getAttribute("data-interaction-intent") ==
-                        "save"
-                ) {
-                    addButton.click();
+            const like = rating > 3;
+            const heart = document.querySelector('[data-interaction-target="heart-button"]');
+            const isHeartAvailable = heart.style.display !== "none";
+            if (isHeartAvailable) {
+                if (heart.classList.contains("active") && !like) {
+                    heart.click();
+                } else if (!heart.classList.contains("active") && like) {
+                    heart.click();
                 }
             } else {
-                if (
-                    addButton.length > 0 &&
-                    addButton[0].getAttribute("data-interaction-intent") ==
-                        "remove"
-                ) {
-                    addButton.click();
+                const add = document.querySelector('[data-button="add"]')
+                if (!like && add.attributes["data-interaction-intent"].value == "remove") {
+                    add.click();
+                } else if (like && add.attributes["data-interaction-intent"].value == "save") {
+                    add.click();
                 }
             }
         };
