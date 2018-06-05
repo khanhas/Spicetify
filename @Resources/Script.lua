@@ -203,6 +203,8 @@ function ParseCoreSetting()
 	sentry = SKIN:GetVariable("DisableSentry") == '1'
 	lyric_alwaysShow = SKIN:GetVariable("LyricAlwaysShow") == '1'
 	lyric_noSync = SKIN:GetVariable("LyricForceNoSync") == '1'
+	experimentalFeatures = SKIN:GetVariable("ExperimentalFeatures") == '1'
+	fastUserSwitching = SKIN:GetVariable("FastUserSwitching") == '1'
 	logging = SKIN:GetVariable("DisableUILogging") == '1'
 end
 
@@ -419,14 +421,14 @@ function Unzip()
 				if (nX ~= "zlink" and nX ~= "login") then
 					data = data:gsub('css/glue%.css', 'https://zlink.app.spotify.com/css/glue.css', 1)
 							:gsub('</head>', '<link rel="stylesheet" class="spicetify-userCSS" href="https://zlink.app.spotify.com/css/user.css">%1', 1)
-				else 
+				else
 					data = data:gsub('</head>', '<link rel="stylesheet" class="spicetify-userCSS" href="css/user.css">%1', 1)
 				end
 				return data
 			end
 		)
 
-		if (nX ~= "zlink" and nX ~= "login") then 
+		if (nX ~= "zlink" and nX ~= "login") then
 			local path = SKIN:ReplaceVariables("#@#Extracted\\Raw\\" .. nX .. "\\css\\glue.css")
 			local glue = io.open(path, 'r')
 			if (glue) then
@@ -590,7 +592,7 @@ function PrepareCSS()
 end
 
 function StartMod()
-	local totalApply = 3 
+	local totalApply = 3
 			+ (injectCSS and 1 or 0)
 			+ (theme and 1 or 0)
 			+ (devTool and 1 or 0)
@@ -598,6 +600,8 @@ function StartMod()
 			+ (home and 1 or 0)
 			+ (lyric_alwaysShow and 1 or 0)
 			+ (lyric_noSync and 1 or 0)
+			+ (experimentalFeatures and 1 or 0)
+			+ (fastUserSwitching and 1 or 0)
 			+ (vis_highFramerate and 1 or 0)
 	UpdatePercent(totalApply)
 	UpdatePercent()
@@ -923,6 +927,22 @@ function Finishing()
 		})
 	end
 
+	if (experimentalFeatures) then
+		UpdateStatus('Enabling Experimental Features')
+		ModJS('zlink', 'main.bundle', {
+			{'isExperimentalFeaturesEnabled&&', 'true&&', 1}
+		})
+		UpdatePercent()
+	end
+
+	if (fastUserSwitching) then
+		UpdateStatus('Enabling Fast user switching')
+		ModJS('zlink', 'main.bundle', {
+			{'isFastUserSwitchingEnabled&&', 'true&&', 1}
+		})
+		UpdatePercent()
+	end
+
 	UpdateStatus('Injecting a websocket and jquery 3.3.1')
 	ModHTML('zlink', {
 		{'(</body>)', '<script type="text/javascript" src="/jquery-3.3.1.min.js"></script><script type="text/javascript" src="/spicetifyWebSocket.js"></script>%1'}
@@ -995,8 +1015,7 @@ function Finishing()
 		--Register progress change event
 		{'PlayerUI%.prototype%._onProgressBarProgress=function.-%{', '%1chrome.player&&chrome.player.dispatchEvent(new Event("onprogress"));', 1},
 		--Leak Cosmos API to chrome.cosmosAPI
-		{'var _spotifyCosmosApi2=_interop.-;', '%1chrome.cosmosAPI=_spotifyCosmosApi2.default;',1}
-
+		{'var _cosmosApi2=_interop.-;', '%1chrome.cosmosAPI=_cosmosApi2.default;', 1}
 	})
 
 	local actExtension = Extension_ParseActivated()
@@ -1203,16 +1222,16 @@ end
 
 function Extension_ShowOption(index, meterIndex)
 	SKIN:Bang('!ShowMeterGroup', 'ExtensionOption')
-	SKIN:Bang('!SetOption', 'ExtensionOptionOpen', 'LeftMouseUpAction', 
+	SKIN:Bang('!SetOption', 'ExtensionOptionOpen', 'LeftMouseUpAction',
 		'["#ROOTCONFIGPATH#Extensions\\' .. extensionTable[index].file .. '"]')
 
-		SKIN:Bang('!SetOption', 'ExtensionOptionUpdate', 'LeftMouseUpAction', 
+		SKIN:Bang('!SetOption', 'ExtensionOptionUpdate', 'LeftMouseUpAction',
 		'!CommandMeasure Script "Extension_Update(' .. index .. ')"')
 
 	local actExtension = Extension_ParseActivated()
 	if (actExtension[extensionTable[index].file]) then
 		SKIN:Bang('!SetOption', 'ExtensionOptionOpen', 'X', '(150-50)r')
-		SKIN:Bang('!SetOption', 'ExtensionOptionWatch', 'LeftMouseUpAction', 
+		SKIN:Bang('!SetOption', 'ExtensionOptionWatch', 'LeftMouseUpAction',
 			'!CommandMeasure Script "Extension_WatchToggle(' .. index .. ')"')
 
 		if (Extension_IsWatching(index)) then
@@ -1226,9 +1245,9 @@ function Extension_ShowOption(index, meterIndex)
 		SKIN:Bang('!HideMeter', 'ExtensionOptionUpdate')
 	end
 
-	SKIN:Bang('!SetOption', 'ExtensionOptionBack', 'Y', 
+	SKIN:Bang('!SetOption', 'ExtensionOptionBack', 'Y',
 		SKIN:GetMeter('ExtensionBack' .. meterIndex):GetY())
-	SKIN:Bang('!SetOption', 'ExtensionOptionBack', 'MouseLeaveAction', 
+	SKIN:Bang('!SetOption', 'ExtensionOptionBack', 'MouseLeaveAction',
 		'[!HideMeterGroup ExtensionOption][!CommandMeasure Script "Extension_DrawPage()"]')
 	SKIN:Bang('!UpdateMeterGroup', 'ExtensionOption')
 
@@ -1295,7 +1314,7 @@ function App_Init()
 
 		if (isValid) then
 			local f = io.open(SKIN:ReplaceVariables('#ROOTCONFIGPATH#Apps\\' .. p ..'\\index.html'), 'r')
-		
+
 			local appElement = {
 				file = p,
 				name = p,
@@ -1459,9 +1478,9 @@ function App_CopyRountine(appIndex)
 			{'PAGE_LOGGER_MAP=%{', '%1' .. table.concat(appPageLogger), 1},
 			{'(return _pageIdentifiers2%.default%[normalizedAppId%]||)(_pageIdentifiers2%.default%.unknownUncovered)',
 			'%1normalizedAppId||%2', 1},
-			{'NavigationBar%.prototype%._initCollectionSection=function%(%)%{', '%1this.sections.push({id:"custom-apps",label:"Your Apps",items: ko.observableArray(['
-				.. table.concat(appMenuItems) .. '])});'
-			}
+			{'_react2%.default%.createElement%(_SidebarList2%.default,%{title',
+			'_react2.default.createElement(_SidebarList2.default,{title:"Your app"},'
+				.. table.concat(appMenuItems, ",") .. ')),_react2.default.createElement("div",{className:"LeftSidebar__section"},%1', 1}
 		})
 		appPageLogger, appMenuItems = nil, nil
 		Succeeded()
@@ -1478,7 +1497,7 @@ function App_CopyRountine(appIndex)
 			'" /S /COPY:D /R:10 /W:1 /NS /LOG', appIndex ~= 1 and '+' or '',
 			':"#@#robocopy_copyapp_log.txt"'
 		}))
-		SKIN:Bang('!SetOption', 'CopyApp', 'FinishAction', 
+		SKIN:Bang('!SetOption', 'CopyApp', 'FinishAction',
 			'!CommandMeasure Script "App_CopyRountine(' .. (appIndex + 1) .. ')"')
 		SKIN:Bang('!UpdateMeasure', 'CopyApp')
 
@@ -1487,7 +1506,7 @@ function App_CopyRountine(appIndex)
 		))
 
 		table.insert(appMenuItems, table.concat(
-			{'new MenuItem("', app.name, '","spotify:app:', app.file, '",{activeRegexp:/spotify:app:', app.file,'(\\:.*)?$/}),'}
+			{'_react2.default.createElement(_SidebarListItem2.default,{isActive:/^spotify:app:', app.file,'(\\:.*)?$/.test(lastRequestedPageUri),isBold:!0,label:"', app.name, '",uri:"spotify:app:', app.file, '"})'}
 		))
 
 		SKIN:Bang('!CommandMeasure', 'CopyApp', 'Run')
@@ -1499,10 +1518,10 @@ end
 
 function App_ShowOption(index, meterIndex)
 	SKIN:Bang('!ShowMeterGroup', 'AppOption')
-	SKIN:Bang('!SetOption', 'AppOptionOpen', 'LeftMouseUpAction', 
+	SKIN:Bang('!SetOption', 'AppOptionOpen', 'LeftMouseUpAction',
 		'"#ROOTCONFIGPATH#Apps\\' .. appTable[index].file .. '"')
 
-	SKIN:Bang('!SetOption', 'AppOptionUpdate', 'LeftMouseUpAction', 
+	SKIN:Bang('!SetOption', 'AppOptionUpdate', 'LeftMouseUpAction',
 		'!CommandMeasure Script "App_Update(' .. index .. ')"')
 
 	local actApp = App_ParseActivated()
@@ -1513,9 +1532,9 @@ function App_ShowOption(index, meterIndex)
 		SKIN:Bang('!HideMeter', 'AppOptionUpdate')
 	end
 
-	SKIN:Bang('!SetOption', 'AppOptionBack', 'Y', 
+	SKIN:Bang('!SetOption', 'AppOptionBack', 'Y',
 		SKIN:GetMeter('AppBack' .. meterIndex):GetY())
-	SKIN:Bang('!SetOption', 'AppOptionBack', 'MouseLeaveAction', 
+	SKIN:Bang('!SetOption', 'AppOptionBack', 'MouseLeaveAction',
 		'[!HideMeterGroup AppOption][!CommandMeasure Script "App_DrawPage()"]')
 	SKIN:Bang('!UpdateMeterGroup', 'AppOption')
 
@@ -1570,7 +1589,7 @@ function App_UpdateManifest(file)
 			elseif (not appName) then
 				needCopy = true
 			end
-		else 
+		else
 			needCopy = true
 		end
 	else
