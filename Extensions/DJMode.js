@@ -18,51 +18,65 @@
         chrome.localStorage.set("DJMode", JSON.stringify(DJSetting));
     }
 
-    var menuEl = $("#profile-menu-container");
+    var menuEl = $("#GluePopoverMenu-container");
 
     // Observing profile menu
     var menuObserver = new MutationObserver(() => {
-        const innerMenu = menuEl.find(".GlueMenu");
+        const innerMenu = menuEl.find(".GlueMenu__root-items");
         innerMenu.prepend(
             `<div
-  class="GlueMenu__item GlueMenu__item--has-submenu"
-  role="menuitem"
-  data-submenu="true"
-  tabindex="-1"
-  aria-haspopup="true"
-  aria-expanded="false"
-  id="DJModeMenu">
-      DJ Mode
-  <div id="DJModeSubMenu" class="GlueMenu GlueMenu--submenu GlueMenu--submenu-left"
-      role="menu"
-      tabindex="-1">
-      <button class="GlueMenu__item${
-          DJSetting.enabled ? " GlueMenu__item--checked" : ""
-      }"
-          role="menuitem"
-          data-submenu="false"
-          tabindex="-1" id="DJModeToggle">
-              Enabled
-      </button>
-      <button class="GlueMenu__item${
-          DJSetting.enabled && DJSetting.hideControls
-              ? " GlueMenu__item--checked"
-              : ""
-      }"
-          role="menuitem"
-          data-submenu="false"
-          tabindex="-1" id="DJModeToggleControl">
-              Hide controls
-      </button>
-  </div>
+    class="GlueMenuItem GlueMenuItem--has-submenu"
+    role="menuitem"
+    data-submenu="true"
+    tabindex="-1"
+    aria-haspopup="true"
+    aria-expanded="false"
+    id="DJModeMenu"
+>
+    DJ Mode
+    <div
+        id="DJModeSubMenu"
+        class="GlueMenu GlueMenu--is-submenu"
+        role="menuitem"
+        tabindex="-1"
+    >
+        <button class="GlueMenuItem .GlueMenuItem--is-active${
+            DJSetting.enabled ? " GlueMenuItemToggle--checked" : ""
+        }"
+            role="menuitem"
+            data-submenu="false"
+            tabindex="-1"
+            id="DJModeToggle"
+        >
+                Enabled
+        </button>
+        <button
+            class="GlueMenuItem .GlueMenuItem--is-active${
+                DJSetting.enabled && DJSetting.hideControls
+                    ? " GlueMenuItemToggle--checked"
+                    : ""
+            }"
+            role="menuitem"
+            data-submenu="false"
+            tabindex="-1"
+            id="DJModeToggleControl"
+        >
+            Hide controls
+        </button>
+    </div>
 </div>`
         );
-        $("#DJModeMenu").on("mouseover", () => {
+        const menu = $("#DJModeMenu");
+        menu.on("mouseover", () => {
             $("#DJModeSubMenu").addClass("open");
+            $(".GlueMenuItem").removeClass("selected");
+            menu.addClass("selected");
         });
-        $("#DJModeMenu").on("mouseleave", () => {
+        menu.on("mouseleave", () => {
             $("#DJModeSubMenu").removeClass("open");
+            menu.removeClass("selected");
         });
+
         $("#DJModeToggle").on("click", () => {
             DJSetting.enabled = !DJSetting.enabled;
             chrome.localStorage.set("DJMode", JSON.stringify(DJSetting));
@@ -72,6 +86,15 @@
             DJSetting.hideControls = !DJSetting.hideControls;
             showHideControl(DJSetting.hideControls);
             chrome.localStorage.set("DJMode", JSON.stringify(DJSetting));
+            if (DJSetting.hideControls) {
+                $("#DJModeToggleControl").addClass(
+                    "GlueMenuItemToggle--checked"
+                );
+            } else {
+                $("#DJModeToggleControl").removeClass(
+                    "GlueMenuItemToggle--checked"
+                );
+            }
         });
     });
 
@@ -214,8 +237,8 @@
                         return;
                     }
                     playButton.html(
-                        `<button 
-    type="button" 
+                        `<button
+    type="button"
     class="button button-icon-with-stroke button-play">
 </button>`
                     );

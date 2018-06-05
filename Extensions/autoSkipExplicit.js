@@ -13,14 +13,14 @@
 
     let ChristianMode = chrome.localStorage.get("ChristianMode") === "true";
 
-    let menuEl = $("#profile-menu-container");
+    let menuEl = $("#GluePopoverMenu-container");
 
     // Observing profile menu
     let menuObserver = new MutationObserver(() => {
-        const innerMenu = menuEl.find(".GlueMenu");
+        const innerMenu = menuEl.find(".GlueMenu__root-items");
         innerMenu.prepend(
-            `<button
-    class="GlueMenu__item${ChristianMode ? " GlueMenu__item--checked" : ""}"
+            `<div
+    class="GlueMenuItem${ChristianMode ? " GlueMenuItemToggle--checked" : ""}"
     id="ChristianModeToggle"
     data-menu-item="christian-mode"
     role="menuitemradio"
@@ -29,15 +29,22 @@
     aria-checked="false"
 >
   ${BUTTON_TEXT}
-</button>`
+</div>`
         );
 
-        $("button#ChristianModeToggle").on("click", () => {
+        const toggle = $("#ChristianModeToggle");
+
+        toggle.on("click", () => {
             ChristianMode = !ChristianMode;
             chrome.localStorage.set(
                 "ChristianMode",
                 JSON.stringify(ChristianMode)
             );
+            if (ChristianMode) {
+                toggle.addClass("GlueMenuItemToggle--checked");
+            } else {
+                toggle.removeClass("GlueMenuItemToggle--checked");
+            }
         });
     });
 
