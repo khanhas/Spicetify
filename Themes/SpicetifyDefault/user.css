@@ -1,6 +1,6 @@
 /*Round corner cover image*/
-.card-image, 
-.card-placeholder-wrapper, 
+.card-image,
+.card-placeholder-wrapper,
 .card-image-content-wrapper,
 .GlueCard:not(.GlueCard--artist) .GlueCard__image,
 .GlueCard:not(.GlueCard--artist) .GlueCard__image-wrapper {
@@ -32,7 +32,7 @@ body.remotebar .view-player .player-bar-wrapper {
 ::-webkit-scrollbar {
 	height: 6px !important;
 	width: 6px !important;
-	background-color: transparent; 
+	background-color: transparent;
 }
 
 /*Round corner scrollbar*/
@@ -409,7 +409,7 @@ Change text color in playlist
 
 /* Move navigation buttons and search field to the right and down */
 .browser-navigation-top-bar {
-	margin-left: 40px !important; 
+	margin-left: 40px !important;
 	margin-top: 15px !important;
 }
 
@@ -449,7 +449,7 @@ Change text color in playlist
 	border-bottom: 0 !important;
 }
 
-/* Adjust Position of border active tab in Nav bar at top 
+/* Adjust Position of border active tab in Nav bar at top
 and add little glowing effect
 */
 .nav.navbar-nav {
@@ -530,9 +530,9 @@ and add little glowing effect
 }
 
 /* Profile arrow in top left */
-.content-top-bar__profile-menu-button .dropdown { 
-	position: fixed !important; 
-	right: 150px !important; 
+.content-top-bar__profile-menu-button .dropdown {
+	position: fixed !important;
+	right: 150px !important;
 	top: 0 !important;
 	-webkit-app-region: no-drag !important;
 }
@@ -543,7 +543,7 @@ and add little glowing effect
 	border-radius: 5px !important;
 }
 
-.lyrics-lines-container, 
+.lyrics-lines-container,
 .message-container {
 	color: var(--modspotify_secondary_fg) !important;
 }
@@ -555,4 +555,16 @@ and add little glowing effect
 
 .GlueCard__info-wrapper {
 	margin-bottom: 30px;
+}
+
+.card-horizontal-interior-wrapper .card-info-title {
+	text-align: start !important;
+}
+
+.tl-row.selected:hover .tl-cell {
+	background: var(--modspotify_scrollbar_fg_and_selected_row_bg) !important;
+}
+
+.GlueTableRow--is-selected {
+	background-color: var(--modspotify_scrollbar_fg_and_selected_row_bg) !important;
 }
