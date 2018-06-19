@@ -945,77 +945,78 @@ function Finishing()
 
 	UpdateStatus('Injecting a websocket and jquery 3.3.1')
 	ModHTML('zlink', {
-		{'(</body>)', '<script type="text/javascript" src="/jquery-3.3.1.min.js"></script><script type="text/javascript" src="/spicetifyWebSocket.js"></script>%1'}
+		{'(<script src="init\.js"></script>)', '%1<script type="text/javascript" src="/jquery-3.3.1.min.js"></script><script type="text/javascript" src="/spicetifyWrapper.js"></script>'}
 	})
 
-	ModInjectExtension('zlink', "#@#JavascriptInject\\", 'spicetifyWebSocket.js')
+	ModInjectExtension('zlink', "#@#JavascriptInject\\", 'spicetifyWrapper.js')
 	ModInjectExtension('zlink', "#@#JavascriptInject\\", 'jquery-3.3.1.min.js')
 
 	UpdateStatus('Leaking useful functions, objects')
 	ModJS('zlink', 'main.bundle', {
 		{'PlayerUI%.prototype%.setup=function%(%){', table.concat({'%1',
-			'chrome.player={};',
-			'chrome.player.seek=(p)=>{if(p<=1)p=Math.round(p*(chrome.playerData?chrome.playerData.track.metadata.duration:0));this.seek(p)};',
-			'chrome.player.getProgressMs=()=>this.progressbar.getRealValue();',
-			'chrome.player.getProgressPercent=()=>this.progressbar.getPercentage();',
-			'chrome.player.getDuration=()=>this.progressbar.getMaxValue();',
-			'chrome.player.skipForward=(a=15e3)=>chrome.player.seek(chrome.player.getProgressMs()+a);',
-			'chrome.player.skipBack=(a=15e3)=>chrome.player.seek(chrome.player.getProgressMs()-a);',
-			'chrome.player.setVolume=(v)=>this.changeVolume(v, false);',
-			'chrome.player.increaseVolume=()=>this.increaseVolume();',
-			'chrome.player.decreaseVolume=()=>this.decreaseVolume();',
-			'chrome.player.getVolume=()=>this.volumebar.getValue();',
-			'chrome.player.next=()=>this._doSkipToNext();',
-			'chrome.player.back=()=>this._doSkipToPrevious();',
-			'chrome.player.togglePlay=()=>this._doTogglePlay();',
-			'chrome.player.play=()=>{eventDispatcher.dispatchEvent(new Event(Event.TYPES.PLAYER_RESUME))};',
-			'chrome.player.pause=()=>{eventDispatcher.dispatchEvent(new Event(Event.TYPES.PLAYER_PAUSE))};',
-			'chrome.player.isPlaying=()=>this.progressbar.isPlaying();',
-			'chrome.player.toggleShuffle=()=>this.toggleShuffle();',
-			'chrome.player.getShuffle=()=>this.shuffle();',
-			'chrome.player.setShuffle=(b)=>{this.shuffle(b)};',
-			'chrome.player.toggleRepeat=()=>this.toggleRepeat();',
-			'chrome.player.getRepeat=()=>this.repeat();',
-			'chrome.player.setRepeat=(r)=>{this.repeat(r)};',
-			'chrome.player.getMute=()=>this.mute();',
-			'chrome.player.toggleMute=()=>this._doToggleMute();',
-			'chrome.player.setMute=(b)=>{this.volumeEnabled()&&this.changeVolume(this._unmutedVolume,b)};',
-			'chrome.player.thumbUp=()=>this.thumbUp();',
-			'chrome.player.getThumbUp=()=>this.trackThumbedUp();',
-			'chrome.player.thumbDown=()=>this.thumbDown();',
-			'chrome.player.getThumbDown=()=>this.trackThumbedDown();',
-			'chrome.player.formatTime=(ms)=>this._formatTime(ms);',
-			'chrome.player.eventListeners={};',
-			'chrome.player.addEventListener=(type,callback)=>{if(!(type in chrome.player.eventListeners)){chrome.player.eventListeners[type]=[]}chrome.player.eventListeners[type].push(callback)};',
-			'chrome.player.removeEventListener=(type,callback)=>{if(!(type in chrome.player.eventListeners)){return}var stack=chrome.player.eventListeners[type];for(var i=0,l=stack.length;i<l;i+=1){if(stack[i]===callback){stack.splice(i,1);return}}};',
-			'chrome.player.dispatchEvent=(event)=>{if(!(event.type in chrome.player.eventListeners)){return true}var stack=chrome.player.eventListeners[event.type];for(var i=0,l=stack.length;i<l;i+=1){stack[i](event)}return!event.defaultPrevented};',
+			'Spicetify.Player.seek=(p)=>{if(p<=1)p=Math.round(p*(Spicetify.Player.data?Spicetify.Player.data.track.metadata.duration:0));this.seek(p)};',
+			'Spicetify.Player.getProgressMs=()=>this.progressbar.getRealValue();',
+			'Spicetify.Player.getProgressPercent=()=>this.progressbar.getPercentage();',
+			'Spicetify.Player.getDuration=()=>this.progressbar.getMaxValue();',
+			'Spicetify.Player.skipForward=(a=15e3)=>Spicetify.Player.seek(Spicetify.Player.getProgressMs()+a);',
+			'Spicetify.Player.skipBack=(a=15e3)=>Spicetify.Player.seek(Spicetify.Player.getProgressMs()-a);',
+			'Spicetify.Player.setVolume=(v)=>this.changeVolume(v, false);',
+			'Spicetify.Player.increaseVolume=()=>this.increaseVolume();',
+			'Spicetify.Player.decreaseVolume=()=>this.decreaseVolume();',
+			'Spicetify.Player.getVolume=()=>this.volumebar.getValue();',
+			'Spicetify.Player.next=()=>this._doSkipToNext();',
+			'Spicetify.Player.back=()=>this._doSkipToPrevious();',
+			'Spicetify.Player.togglePlay=()=>this._doTogglePlay();',
+			'Spicetify.Player.play=()=>{eventDispatcher.dispatchEvent(new Event(Event.TYPES.PLAYER_RESUME))};',
+			'Spicetify.Player.pause=()=>{eventDispatcher.dispatchEvent(new Event(Event.TYPES.PLAYER_PAUSE))};',
+			'Spicetify.Player.isPlaying=()=>this.progressbar.isPlaying();',
+			'Spicetify.Player.toggleShuffle=()=>this.toggleShuffle();',
+			'Spicetify.Player.getShuffle=()=>this.shuffle();',
+			'Spicetify.Player.setShuffle=(b)=>{this.shuffle(b)};',
+			'Spicetify.Player.toggleRepeat=()=>this.toggleRepeat();',
+			'Spicetify.Player.getRepeat=()=>this.repeat();',
+			'Spicetify.Player.setRepeat=(r)=>{this.repeat(r)};',
+			'Spicetify.Player.getMute=()=>this.mute();',
+			'Spicetify.Player.toggleMute=()=>this._doToggleMute();',
+			'Spicetify.Player.setMute=(b)=>{this.volumeEnabled()&&this.changeVolume(this._unmutedVolume,b)};',
+			'Spicetify.Player.thumbUp=()=>this.thumbUp();',
+			'Spicetify.Player.getThumbUp=()=>this.trackThumbedUp();',
+			'Spicetify.Player.thumbDown=()=>this.thumbDown();',
+			'Spicetify.Player.getThumbDown=()=>this.trackThumbedDown();',
+			'Spicetify.Player.formatTime=(ms)=>this._formatTime(ms);',
+			'Spicetify.Player.eventListeners={};',
+			'Spicetify.Player.addEventListener=(type,callback)=>{if(!(type in Spicetify.Player.eventListeners)){Spicetify.Player.eventListeners[type]=[]}Spicetify.Player.eventListeners[type].push(callback)};',
+			'Spicetify.Player.removeEventListener=(type,callback)=>{if(!(type in Spicetify.Player.eventListeners)){return}var stack=Spicetify.Player.eventListeners[type];for(var i=0,l=stack.length;i<l;i+=1){if(stack[i]===callback){stack.splice(i,1);return}}};',
+			'Spicetify.Player.dispatchEvent=(event)=>{if(!(event.type in Spicetify.Player.eventListeners)){return true}var stack=Spicetify.Player.eventListeners[event.type];for(var i=0,l=stack.length;i<l;i+=1){stack[i](event)}return!event.defaultPrevented};',
 		}), 1},
 
-		--Leak track meta data, player state, current playlist to chrome.playerData
-		{'const metadata=data%.track%.metadata;', '%1chrome.playerData=data;', 1},
+		--Leak track meta data, player state, current playlist to Spicetify.Player.data
+		{'const metadata=data%.track%.metadata;', '%1Spicetify.Player.data=data;', 1},
 		--Leak localStorage and showNotification
-		{'_localStorage2%.default%.get%(SETTINGS_KEY_AD%);', '%1chrome.localStorage=_localStorage2.default;chrome.showNotification = text => {_eventDispatcher2.default.dispatchEvent(new _event2.default(_event2.default.TYPES.SHOW_NOTIFICATION_BUBBLE, {i18n: text}))};', 1},
+		{'_localStorage2%.default%.get%(SETTINGS_KEY_AD%);', '%1Spicetify.LocalStorage=_localStorage2.default;Spicetify.showNotification = text => {_eventDispatcher2.default.dispatchEvent(new _event2.default(_event2.default.TYPES.SHOW_NOTIFICATION_BUBBLE, {i18n: text}))};', 1},
 		--Leak bridgeAPI
-		{'BuddyList%.prototype%.setup=function%(%)%{', '%1chrome.bridgeAPI = _bridge;', 1},
-		--Leak audio data fetcher to chrome.getAudioData
+		{'_bridge=__webpack.-;', '%1Spicetify.BridgeAPI = _bridge;', 1},
+		--Leak audio data fetcher to Spicetify.getAudioData
 		{'PlayerHelper%.prototype%._player=null', table.concat({
 			'var uriToId=u=>{var t=u.match(/^spotify:track:(.*)/);if(!t||t.length<2)return false;else return t[1]};',
-			'chrome.getAudioData=(callback, uri)=>{uri=uri||chrome.playerData.track.uri;if(typeof(callback)!=="function"){console.log("chrome.getAudioData: callback has to be a function");return;};var id=uriToId(uri);if(id)cosmos.resolver.get(`hm://audio-attributes/v1/audio-analysis/${id}`, (e,p)=>{if(e){console.log(e);callback(null);return;}if(p._status===200&&p._body&&p._body!==""){var data=JSON.parse(p._body);data.uri=uri;callback(data);}else callback(null)})};',
-			'new Player(cosmos.resolver,"spotify:internal:queue","queue","1.0.0").subscribeToQueue((e,r)=>{if(e){console.log(e);return;}chrome.queue=r.getJSONBody();});',
+			'Spicetify.getAudioData=(callback, uri)=>{uri=uri||Spicetify.Player.data.track.uri;if(typeof(callback)!=="function"){console.log("Spicetify.getAudioData: callback has to be a function");return;};var id=uriToId(uri);if(id)cosmos.resolver.get(`hm://audio-attributes/v1/audio-analysis/${id}`, (e,p)=>{if(e){console.log(e);callback(null);return;}if(p._status===200&&p._body&&p._body!==""){var data=JSON.parse(p._body);data.uri=uri;callback(data);}else callback(null)})};',
+			'new Player(cosmos.resolver,"spotify:internal:queue","queue","1.0.0").subscribeToQueue((e,r)=>{if(e){console.log(e);return;}Spicetify.Queue=r.getJSONBody();});',
 			'%1'}), 1},
 		{'const Adaptor=function%(bridge,cosmos%)%{', table.concat({'%1',
-			'chrome.libURI = liburi;',
-			'chrome.addToQueue=(uri,callback)=>{uri=liburi.from(uri);if(uri.type===liburi.Type.ALBUM){this.getAlbumTracks(uri,(err,tracks)=>{if(err){console.log("chrome.addToQueue",err);return};this.queueTracks(tracks,callback)})}else if(uri.type===liburi.Type.TRACK||uri.type===liburi.Type.EPISODE){this.queueTracks([uri],callback)}else{console.log("chrome.addToQueue: Only Track, Album, Episode URIs are accepted")}};',
-			'chrome.removeFromQueue=(uri,callback)=>{if(chrome.queue){var indices=[],uriObj=liburi.from(uri);if(uriObj.type===liburi.Type.ALBUM){this.getAlbumTracks(uriObj,(err,tracks)=>{if(err){console.log(err);return}tracks.forEach(t=>chrome.queue.next_tracks.forEach((nt,index)=>t==nt.uri&&indices.push(index)))})}else if(uriObj.type===liburi.Type.TRACK||uriObj.type===liburi.Type.EPISODE){chrome.queue.next_tracks.forEach((track,index)=>track.uri==uri&&indices.push(index))}else{console.log("chrome.removeFromQueue: Only Album, Track and Episode URIs are accepted")}indices=indices.reduce((a,b)=>{if(a.indexOf(b)<0){a.push(b)}return a},[]);this.removeTracksFromQueue(indices,callback)}};',
+			'Spicetify.LibURI = liburi;',
+			'Spicetify.addToQueue=(uri,callback)=>{uri=liburi.from(uri);if(uri.type===liburi.Type.ALBUM){this.getAlbumTracks(uri,(err,tracks)=>{if(err){console.log("Spicetify.addToQueue",err);return};this.queueTracks(tracks,callback)})}else if(uri.type===liburi.Type.TRACK||uri.type===liburi.Type.EPISODE){this.queueTracks([uri],callback)}else{console.log("Spicetify.addToQueue: Only Track, Album, Episode URIs are accepted")}};',
+			'Spicetify.removeFromQueue=(uri,callback)=>{if(Spicetify.Queue){var indices=[],uriObj=liburi.from(uri);if(uriObj.type===liburi.Type.ALBUM){this.getAlbumTracks(uriObj,(err,tracks)=>{if(err){console.log(err);return}tracks.forEach(t=>Spicetify.Queue.next_tracks.forEach((nt,index)=>t==nt.uri&&indices.push(index)))})}else if(uriObj.type===liburi.Type.TRACK||uriObj.type===liburi.Type.EPISODE){Spicetify.Queue.next_tracks.forEach((track,index)=>track.uri==uri&&indices.push(index))}else{console.log("Spicetify.removeFromQueue: Only Album, Track and Episode URIs are accepted")}indices=indices.reduce((a,b)=>{if(a.indexOf(b)<0){a.push(b)}return a},[]);this.removeTracksFromQueue(indices,callback)}};',
 		}), 1},
 		--Register song change event
-		{'this%._uri=track%.uri,this%._trackMetadata=track%.metadata', '%1,chrome.player&&chrome.player.dispatchEvent(new Event("songchange"))', 1},
+		{'this%._uri=track%.uri,this%._trackMetadata=track%.metadata', '%1,Spicetify.Player.dispatchEvent&&Spicetify.Player.dispatchEvent(new Event("songchange"))', 1},
 		--Register play/pause state change event
-		{'this%.playing%(data%.is_playing&&!data%.is_paused%).-;', '%1(this.playing()!==this._isPlaying)&&(this._isPlaying=this.playing(),chrome.player&&chrome.player.dispatchEvent(new Event("onplaypause")));', 1},
+		{'this%.playing%(data%.is_playing&&!data%.is_paused%).-;', '%1(this.playing()!==this._isPlaying)&&(this._isPlaying=this.playing(),Spicetify.Player.dispatchEvent&&Spicetify.Player.dispatchEvent(new Event("onplaypause")));', 1},
 		--Register progress change event
-		{'PlayerUI%.prototype%._onProgressBarProgress=function.-%{', '%1chrome.player&&chrome.player.dispatchEvent(new Event("onprogress"));', 1},
-		--Leak Cosmos API to chrome.cosmosAPI
-		{'var _cosmosApi2=_interop.-;', '%1chrome.cosmosAPI=_cosmosApi2.default;', 1}
+		{'PlayerUI%.prototype%._onProgressBarProgress=function.-%{', '%1Spicetify.Player.dispatchEvent&&Spicetify.Player.dispatchEvent(new Event("onprogress"));', 1},
+		--Leak Cosmos API to Spicetify.cosmosAPI
+		{'var _cosmosApi2=_interop.-;', '%1Spicetify.CosmosAPI=_cosmosApi2.default;', 1},
+		--Leak playbackControl to Spicetify.PlaybackControl
+		{'playbackControl=.-;', '%1Spicetify.PlaybackControl = playbackControl;'},
 	})
 
 	local actExtension = Extension_ParseActivated()
@@ -1478,7 +1479,7 @@ function App_CopyRountine(appIndex)
 			{'PAGE_LOGGER_MAP=%{', '%1' .. table.concat(appPageLogger), 1},
 			{'(return _pageIdentifiers2%.default%[normalizedAppId%]||)(_pageIdentifiers2%.default%.unknownUncovered)',
 			'%1normalizedAppId||%2', 1},
-			{'_react2%.default%.createElement%(_SidebarList2%.default,%{title',
+			{'_react2%.default%.createElement%(_SidebarList2%.default,%{title:_i18n2%.default%.get%("your_music%.app_name"',
 			'_react2.default.createElement(_SidebarList2.default,{title:"Your app"},'
 				.. table.concat(appMenuItems, ",") .. ')),_react2.default.createElement("div",{className:"LeftSidebar__section"},%1', 1}
 		})

@@ -3,15 +3,18 @@
 // AUTHOR: khanhas
 // DESCRIPTION: Auto skip explicit songs. Toggle in Profile menu.
 // END METADATA
+
+/// <reference path="../globals.d.ts" />
+
 (function ChristianSpotify() {
     const BUTTON_TEXT = "Christian mode";
 
-    if (!chrome.localStorage) {
+    if (!Spicetify.LocalStorage) {
         setTimeout(ChristianSpotify, 200);
         return;
     }
 
-    let ChristianMode = chrome.localStorage.get("ChristianMode") === "true";
+    let ChristianMode = Spicetify.LocalStorage.get("ChristianMode") === "true";
 
     let menuEl = $("#GluePopoverMenu-container");
 
@@ -36,7 +39,7 @@
 
         toggle.on("click", () => {
             ChristianMode = !ChristianMode;
-            chrome.localStorage.set(
+            Spicetify.LocalStorage.set(
                 "ChristianMode",
                 JSON.stringify(ChristianMode)
             );
@@ -50,14 +53,14 @@
 
     menuObserver.observe(menuEl[0], { childList: true });
 
-    chrome.player.addEventListener("songchange", () => {
-        if (!chrome.playerData || !chrome.player) return;
+    Spicetify.Player.addEventListener("songchange", () => {
+        if (!Spicetify.Player.data) return;
 
         let isExplicit =
             ChristianMode &&
-            chrome.playerData.track.metadata.is_explicit === "true";
+            Spicetify.Player.data.track.metadata.is_explicit === "true";
         if (isExplicit) {
-            chrome.player.next();
+            Spicetify.Player.next();
         }
     });
 })();

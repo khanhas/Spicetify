@@ -3,17 +3,21 @@
 // AUTHOR: khanhas
 // DESCRIPTION: Auto skip video
 // END METADATA
+
+/// <reference path="../globals.d.ts" />
+
 (function SkipVideo() {
-    if (!chrome.playerData || !chrome.player) {
+    if (!Spicetify.Player.data) {
         setTimeout(SkipVideo, 2000);
         return;
     }
-    chrome.player.addEventListener("songchange", () => {
+    Spicetify.Player.addEventListener("songchange", () => {
         //Ads are also video media type so I need to exclude them out.
-        var isVideo = chrome.playerData.track.metadata["media.type"]==="video"
-            && !(chrome.playerData.track.metadata.is_advertisement==="true")
+        var isVideo =
+            Spicetify.Player.data.track.metadata["media.type"] === "video" &&
+            !(Spicetify.Player.data.track.metadata.is_advertisement === "true");
         if (isVideo) {
-            chrome.player.next();
+            Spicetify.Player.next();
         }
-    })
-})()
+    });
+})();

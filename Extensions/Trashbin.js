@@ -3,9 +3,12 @@
 // AUTHOR: khanhas
 // DESCRIPTION: Throw songs to trashbin and never hear it again.
 // END METADATA
+
+/// <reference path="../globals.d.ts" />
+
 (function TrashBin() {
     /**
-     * By default, trash songs list is saved in chrome.localStorage but
+     * By default, trash songs list is saved in Spicetify.LocalStorage but
      * everything will be cleaned if Spotify is uninstalled. So instead
      * of collecting trash songs again, you can use JsonBin service to
      * store your list, which is totally free and fast. Go to website
@@ -45,9 +48,9 @@
 
     function init() {
         if (
-            !chrome.playerData ||
-            !chrome.player ||
-            (!jsonBinURL && !chrome.localStorage)
+            !Spicetify.Player.data ||
+            !Spicetify.Player ||
+            (!jsonBinURL && !Spicetify.LocalStorage)
         ) {
             setTimeout(init, 1000);
             return;
@@ -85,21 +88,21 @@
                                 trashArtistList,
                             }),
                             error: (err) => {
-                                console.error(err.responseJSON);
+                                console.error(err);
                             },
                         });
                     }
                 },
                 error: (err) => {
-                    console.error(err.responseJSON);
+                    console.error(err);
                 },
             });
         } else {
             trashSongList = JSON.parse(
-                chrome.localStorage.get("TrashSongList")
+                Spicetify.LocalStorage.get("TrashSongList")
             );
             trashArtistList = JSON.parse(
-                chrome.localStorage.get("TrashArtistList")
+                Spicetify.LocalStorage.get("TrashArtistList")
             );
 
             if (dataIsInOldFormat(trashSongList))
@@ -109,12 +112,12 @@
                 trashArtistList = migrateDataToNewFormat(trashArtistList);
 
             if (!trashSongList) {
-                chrome.localStorage.set("TrashSongList", "{}");
+                Spicetify.LocalStorage.set("TrashSongList", "{}");
                 trashSongList = {};
             }
 
             if (!trashArtistList) {
-                chrome.localStorage.set("TrashArtistList", "{}");
+                Spicetify.LocalStorage.set("TrashArtistList", "{}");
                 trashArtistList = {};
             }
         }
@@ -126,11 +129,11 @@
         trashIcon.on("click", () => {
             banSong();
 
-            if (!trashSongList[chrome.playerData.track.uri]) {
-                trashSongList[chrome.playerData.track.uri] = true;
-                chrome.player.next();
+            if (!trashSongList[Spicetify.Player.data.track.uri]) {
+                trashSongList[Spicetify.Player.data.track.uri] = true;
+                Spicetify.Player.next();
             } else {
-                delete trashSongList[chrome.playerData.track.uri];
+                delete trashSongList[Spicetify.Player.data.track.uri];
             }
 
             updateIconColor();
@@ -147,7 +150,7 @@
         updateIconPosition();
         updateIconColor();
 
-        chrome.player.addEventListener("songchange", watchChange);
+        Spicetify.Player.addEventListener("songchange", watchChange);
 
         watchArtistPage();
     }
@@ -217,15 +220,15 @@
                 contentType: "application/json",
                 data: JSON.stringify({ trashSongList, trashArtistList }),
                 error: (err) => {
-                    console.error(err.responseJSON);
+                    console.error(err);
                 },
             });
         } else {
-            chrome.localStorage.set(
+            Spicetify.LocalStorage.set(
                 "TrashSongList",
                 JSON.stringify(trashSongList)
             );
-            chrome.localStorage.set(
+            Spicetify.LocalStorage.set(
                 "TrashArtistList",
                 JSON.stringify(trashArtistList)
             );
@@ -241,23 +244,23 @@
             return;
         }
 
-        if (trashSongList[chrome.playerData.track.uri]) {
-            chrome.player.next();
+        if (trashSongList[Spicetify.Player.data.track.uri]) {
+            Spicetify.Player.next();
             return;
         }
 
         let uriIndex = 0;
-        let artistUri = chrome.playerData.track.metadata[baseArtistUri];
+        let artistUri = Spicetify.Player.data.track.metadata[baseArtistUri];
 
         while (artistUri) {
             if (trashArtistList[artistUri]) {
-                chrome.player.next();
+                Spicetify.Player.next();
                 return;
             }
 
             uriIndex++;
             artistUri =
-                chrome.playerData.track.metadata[
+                Spicetify.Player.data.track.metadata[
                     baseArtistUri + ":" + uriIndex
                 ];
         }
@@ -295,14 +298,14 @@
     }
 
     function updateIconColor() {
-        if (chrome.playerData.track.metadata["is_advertisement"] === "true") {
+        if (Spicetify.Player.data.track.metadata["is_advertisement"] === "true") {
             trashIcon.attr("disabled", true);
             return;
         }
 
         trashIcon.removeAttr("disabled");
 
-        if (trashSongList[chrome.playerData.track.uri]) {
+        if (trashSongList[Spicetify.Player.data.track.uri]) {
             trashIcon.addClass("active");
             trashIcon.attr("data-tooltip-text", UNTHROW_TEXT);
         } else {

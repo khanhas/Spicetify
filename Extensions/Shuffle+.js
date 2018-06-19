@@ -3,6 +3,9 @@
 // AUTHOR: khanhas
 // DESCRIPTION: True shuffle wtih no bias.
 // END METADATA
+
+/// <reference path="../globals.d.ts" />
+
 (function ShufflePlus() {
     // Context shuffle buttons
     const CONTEXT_SHUFFLE = `<button class="button button-green shufflePlusContext">Shuffle Context</button>`;
@@ -16,7 +19,7 @@
     // Whether Shuffer Queue should show.
     const showShuffleQueueButton = true;
 
-    if (!chrome.cosmosAPI && !chrome.libURI) {
+    if (!Spicetify.CosmosAPI && !Spicetify.LibURI) {
         setTimeout(ShufflePlus, 1000);
         return;
     }
@@ -45,8 +48,8 @@
     }, 1000);
 
     function contextShuffle() {
-        const contextURI = chrome.playerData.context_uri;
-        const uriObj = chrome.libURI.from(contextURI);
+        const contextURI = Spicetify.Player.data.context_uri;
+        const uriObj = Spicetify.LibURI.from(contextURI);
         const uriType = uriObj.type;
         if (uriType === "playlist") {
             playlistShuffle(contextURI);
@@ -57,15 +60,15 @@
         } else if (uriType === "show") {
             showShuffle(uriObj._base62Id);
         } else {
-            chrome.showNotification &&
-                chrome.showNotification(
+            Spicetify.showNotification &&
+            Spicetify.showNotification(
                     `Unsupported context URI type: ${uriType}`
                 );
         }
     }
 
     function queueShuffle() {
-        let replace = chrome.queue.next_tracks;
+        let replace = Spicetify.Queue.next_tracks;
         let delimiterIndex = -1;
 
         for (let i = 0; i < replace.length; i++) {
@@ -83,7 +86,7 @@
     }
 
     function playlistShuffle(uri) {
-        chrome.bridgeAPI.cosmosJSON(
+        Spicetify.BridgeAPI.cosmosJSON(
             {
                 method: "GET",
                 uri: `sp://core-playlist/v1/playlist/${uri}/rows`,
@@ -109,7 +112,7 @@
     }
 
     function collectionShuffle() {
-        chrome.bridgeAPI.cosmosJSON(
+        Spicetify.BridgeAPI.cosmosJSON(
             {
                 method: "GET",
                 uri: "sp://core-collection/unstable/@/list/tracks/all",
@@ -138,7 +141,7 @@
 
     function albumShuffle(uri) {
         const arg = [uri, 0, -1];
-        chrome.bridgeAPI.request("album_tracks_snapshot", arg, (error, res) => {
+        Spicetify.BridgeAPI.request("album_tracks_snapshot", arg, (error, res) => {
             if (error) {
                 console.log("albumShuffle", error);
                 return;
@@ -153,7 +156,7 @@
     }
 
     function showShuffle(uriBase62) {
-        chrome.cosmosAPI.resolver.get(
+        Spicetify.CosmosAPI.resolver.get(
             {
                 url: `sp://core-show/unstable/show/${uriBase62}`,
             },
@@ -197,28 +200,28 @@
         const count = state.length;
 
         state.push({ uri: "spotify:delimiter" });
-        const currentQueue = chrome.queue;
+        const currentQueue = Spicetify.Queue;
         currentQueue.next_tracks = state;
 
         const stringified = JSON.stringify(currentQueue);
 
         state.length = 0; // Flush array.
 
-        const request = new chrome.cosmosAPI.Request(
+        const request = new Spicetify.CosmosAPI.Request(
             "PUT",
             "sp://player/v2/main/queue",
             null,
             stringified
         );
 
-        chrome.cosmosAPI.resolver.resolve(request, (error, response) => {
+        Spicetify.CosmosAPI.resolver.resolve(request, (error, response) => {
             if (error) {
                 console.log(error);
                 return;
             }
 
-            chrome.showNotification &&
-                chrome.showNotification(NOTIFICATION_TEXT(count));
+            Spicetify.showNotification &&
+                Spicetify.showNotification(NOTIFICATION_TEXT(count));
         });
     }
 })();

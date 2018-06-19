@@ -3,8 +3,11 @@
 // AUTHOR: khanhas
 // DESCRIPTION: Add Queue All button in every album carousel.
 // END METADATA
+
+/// <reference path="../globals.d.ts" />
+
 (function QueueAll() {
-    if (!chrome.addToQueue || !chrome.libURI) {
+    if (!Spicetify.addToQueue || !Spicetify.LibURI) {
         setTimeout(QueueAll, 1000);
         return;
     }
@@ -84,7 +87,7 @@
             addingElement.innerText = `${ADDING_TEXT} ${index + 1}/${
                 uris.length
             }`;
-            chrome.addToQueue(uris[index], (error) => {
+            Spicetify.addToQueue(uris[index], (error) => {
                 if (error) {
                     console.log(error);
                 } else {
@@ -124,11 +127,11 @@
     }
 
     function filterURI(uri) {
-        uri = chrome.libURI.from(uri);
+        uri = Spicetify.LibURI.from(uri);
         if (
-            uri.type === chrome.libURI.Type.ALBUM ||
-            uri.type === chrome.libURI.Type.TRACK ||
-            uri.type === chrome.libURI.Type.EPISODE
+            uri.type === Spicetify.LibURI.Type.ALBUM ||
+            uri.type === Spicetify.LibURI.Type.TRACK ||
+            uri.type === Spicetify.LibURI.Type.EPISODE
         ) {
             return true;
         } else {

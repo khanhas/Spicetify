@@ -3,19 +3,22 @@
 // AUTHOR: khanhas
 // DESCRIPTION: Queue only mode, Hide all controls. Toggles in Profile menu.
 // END METADATA
+
+/// <reference path="../globals.d.ts" />
+
 (function DJMode() {
-    if (!chrome.localStorage || !chrome.addToQueue || !chrome.libURI) {
+    if (!Spicetify.LocalStorage || !Spicetify.addToQueue || !Spicetify.LibURI) {
         setTimeout(DJMode, 200);
         return;
     }
 
-    let DJSetting = JSON.parse(chrome.localStorage.get("DJMode"));
+    let DJSetting = JSON.parse(Spicetify.LocalStorage.get("DJMode"));
     if (!DJSetting || typeof DJSetting !== "object") {
         DJSetting = {
             enabled: false,
             hideControls: false,
         };
-        chrome.localStorage.set("DJMode", JSON.stringify(DJSetting));
+        Spicetify.LocalStorage.set("DJMode", JSON.stringify(DJSetting));
     }
 
     var menuEl = $("#GluePopoverMenu-container");
@@ -79,13 +82,13 @@
 
         $("#DJModeToggle").on("click", () => {
             DJSetting.enabled = !DJSetting.enabled;
-            chrome.localStorage.set("DJMode", JSON.stringify(DJSetting));
+            Spicetify.LocalStorage.set("DJMode", JSON.stringify(DJSetting));
             document.location.reload();
         });
         $("#DJModeToggleControl").on("click", () => {
             DJSetting.hideControls = !DJSetting.hideControls;
             showHideControl(DJSetting.hideControls);
-            chrome.localStorage.set("DJMode", JSON.stringify(DJSetting));
+            Spicetify.LocalStorage.set("DJMode", JSON.stringify(DJSetting));
             if (DJSetting.hideControls) {
                 $("#DJModeToggleControl").addClass(
                     "GlueMenuItemToggle--checked"
@@ -152,7 +155,7 @@
     showHideControl(DJSetting.hideControls);
 
     function isValidURI(uri) {
-        const uriType = chrome.libURI.from(uri).type;
+        const uriType = Spicetify.LibURI.from(uri).type;
         if (
             !uri &&
             uriType !== "album" &&
@@ -166,9 +169,9 @@
 
     function addClickToQueue(button, uri) {
         button.on("click", function() {
-            chrome.addToQueue(uri, () => {
-                chrome.bridgeAPI.request("track_metadata", [uri], (e, p) => {
-                    chrome.showNotification(
+            Spicetify.addToQueue(uri, () => {
+                Spicetify.BridgeAPI.request("track_metadata", [uri], (e, p) => {
+                    Spicetify.showNotification(
                         `${p.name} - ${p.artists[0].name} added to queue`
                     );
                 });
