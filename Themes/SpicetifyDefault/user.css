@@ -568,3 +568,7 @@ and add little glowing effect
 .GlueTableRow--is-selected {
 	background-color: var(--modspotify_scrollbar_fg_and_selected_row_bg) !important;
 }
+
+.tracklist-podcast .tl-progress .row-progress__bar {
+    background-color: var(--modspotify_main_fg);
+}
