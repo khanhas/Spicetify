@@ -306,7 +306,8 @@ Collage of 3 album covers is usually seen in Browse and Chart.
 	background-color: rgba(var(--modspotify_rgb_cover_overlay_and_shadow),0.8) !important;
 	border-radius: 10px 10px 0 0 !important;
 	text-align: left !important;
-	width: calc(100% - 40px) !important;
+	width: 100% !important;
+	margin: 0 !important;
 }
 /*
 We use round corner on cover so they look weird in original
