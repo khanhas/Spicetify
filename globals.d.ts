@@ -167,6 +167,7 @@ declare class Spicetify {
     public static CosmosAPI: any;
     public static getAudioData: (callback: (data: any) => void, uri?: string) => void;
     public static LibURI: any;
+    public static LiveAPI: any;
     public static LocalStorage: any;
     public static PlaybackControl: any;
     public static Queue: any;
