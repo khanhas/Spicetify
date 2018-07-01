@@ -22,7 +22,6 @@
     const MOUNT_CLASSES = ".GlueCarousel";
     const CARD_CLASSES =
         ".card, header.header.header-inline.header-album, .GlueCard";
-    const CARD_CLASSES_2 = ".crsl-item.col-xs-6.col-sm-4.col-md-3.col-lg-2";
     const QUEUEALL_BUTTON = `<button queue-all-done="0" class="custom-queue-all button button-with-stroke button-add" style="font-weight:300;margin-left:20px">${BUTTON_TEXT}</button>`;
     const BROWSE_REGEXP = new RegExp(
         /spotify:app:browse:(discover|releases|podcasts)/
