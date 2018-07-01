@@ -203,11 +203,9 @@ function ParseCoreSetting()
 	sentry = SKIN:GetVariable("DisableSentry") == '1'
 	lyric_alwaysShow = SKIN:GetVariable("LyricAlwaysShow") == '1'
 	lyric_noSync = SKIN:GetVariable("LyricForceNoSync") == '1'
-	vis_highFramerate = SKIN:GetVariable("VisualizationHighFramerate") == '1'
 	experimentalFeatures = SKIN:GetVariable("ExperimentalFeatures") == '1'
 	fastUserSwitching = SKIN:GetVariable("FastUserSwitching") == '1'
 	logging = SKIN:GetVariable("DisableUILogging") == '1'
-	devTool = SKIN:GetVariable("DevTool") == '1'
 end
 
 liveUpdate = false
@@ -360,11 +358,10 @@ function Unzip()
 	--Pre-process
 	if (nX) then
 		local p = "#@#Extracted\\Raw\\" .. nX .. "\\bundle.js"
-		local altP = "#@#Extracted\\Raw\\" .. nX .. "\\" .. nX .. ".bundle.js"
+		local altP = "#@#Extracted\\Raw\\" .. nX .. "\\main.bundle.js"
 		if (sentry) then
 			function disableSentry(d)
-				d = d:gsub('sentry%.install%(%)[,;]', '', 1)
-				d = d:gsub('"https://%w+@sentry.io/%d+"', '"https://NO@TELEMETRY.IS/BAD"')
+				d = d:gsub('sentry%.install%(%),?', '', 1)
 				return d
 			end
 
@@ -384,18 +381,19 @@ function Unzip()
 				if (nX == "browse" or nX == "collection" or
 					nX == "genre" or nX == "hub") then
 					UpdateStatus("Removing UI logger of " .. n)
-					d =d:gsub('logUIInteraction5%([%w_]+,[%w_]+%)%{', '%1return;', 1)
-						:gsub('logUIImpression5%([%w_]+,[%w_]+%)%{', '%1return;', 1)
-						:gsub('_logUIInteraction5%([%w_]+%)%{', '%1return;', 1)
-						:gsub('_logUIImpression5%([%w_]+%)%{', '%1return;', 1)
+					d =d:gsub('logUIInteraction5%(json, logInConsole%) %{', '%1return;', 1)
+						:gsub('logUIImpression5%(json, logInConsole%) %{', '%1return;', 1)
+						:gsub('_logUIInteraction5%(json%) %{', '%1return;', 1)
+						:gsub('_logUIImpression5%(json%) %{', '%1return;', 1)
 						:gsub('this%._documentFragment%.query%(\'%[data%-log%-click%]\'%)', 'return;%1')
-						:gsub('_onClickDataLogClick%([%w_]+%)%{', '%1return;')
-						:gsub('_setUpStandardImpressionLogging%(%)%{', '%1return;')
+						:gsub('_onClickDataLogClick%(element%) %{', '%1return;')
+						:gsub('_setUpStandardImpressionLogging%(%) %{', '%1return;')
 				end
 
 				if (nX == "zlink") then
 					UpdateStatus("Removing UI logger of " .. n)
-					d = d:gsub('prototype._logUIInteraction5=function%(.-%){', '%1return;')
+					d = d:gsub('_logUIInteraction5=function.-{', '%1return;')
+							:gsub('_UIInteraction2%.default%.log', 'void')
 				end
 
 				if (nX == "lyrics") then
@@ -405,11 +403,11 @@ function Unzip()
 
 				if (nX == "playlist") then
 					UpdateStatus("Removing UI logger of " .. n)
-					d = d:gsub('(exports%.logPlaylistImpression=)[%w_]+', '%1()=>{}', 1)
-						 :gsub('(exports%.logEndOfListImpression=)[%w_]+', '%1()=>{}', 1)
-						 :gsub('(exports%.logListQuickJump=)[%w_]+', '%1()=>{}', 1)
-						 :gsub('(exports%.logListItemSelected=)[%w_]+', '%1()=>{}', 1)
-						 :gsub('(exports%.logFeedbackInteraction=)[%w_]+', '%1()=>{}', 1)
+					d = d:gsub('(exports%.logPlaylistImpression = )logPlaylistImpression', '%1()=>{}', 1)
+						 :gsub('(exports%.logEndOfListImpression = )logEndOfListImpression', '%1()=>{}', 1)
+						 :gsub('(exports%.logListQuickJump = )logListQuickJump', '%1()=>{}', 1)
+						 :gsub('(exports%.logListItemSelected = )logListItemSelected', '%1()=>{}', 1)
+						 :gsub('(exports%.logFeedbackInteraction = )logFeedbackInteraction', '%1()=>{}', 1)
 				end
 				return d
 			end
@@ -835,6 +833,7 @@ function CopyUserCSS()
 	UpdateStatus('Transferring user.css')
 	local d = {}
 
+
 	UpdatePercent()
 	table.insert(d, ':root {')
 	local colorTable = theme and color or defaultSpotifyColor
@@ -874,77 +873,73 @@ function UpdateUserCSS()
 	SKIN:Bang('!CommandMeasure', 'WebSocket', 'reloadspotify')
 end
 
-function findSymbol(info, package, key)
-	local p = SKIN:ReplaceVariables("%appdata%\\Spotify\\Apps\\" .. package .. "\\" .. package .. ".bundle.js")
-	local f = io.open(p, "r")
-	local d = f:read("*a")
-	f:close()
-	local k
-	for i = 1, #key do
-		k = {d:match(key[i])}
-		if (#k ~= 0) then
-			return unpack(k)
-		end
-	end
-	print("Cannot find symbol for " .. info .. " in package " .. package)
-	return nil
-end
-
 function Finishing()
 	CopyUserCSS()
 
-	local modTable = {}
-
 	if (devTool) then
 		UpdateStatus('Enabling developer tools')
+		UpdatePercent()
 		ModJS('settings', 'bundle', {
-			{"isEmployee=", "%1true||"}
+			{"(const isEmployee = ).-;", "%1true;"}
 		})
 		UpdatePercent()
 	end
 
 	if (radio) then
 		UpdateStatus('Enabling Radio')
-		table.insert(modTable, {'radioIsVisible=', '%1true||', 1})
+		ModJS('zlink', 'main.bundle', {
+			{'%(0,_productState%.hasValue%)%("radio","1"%)', 'true'}
+		})
 		UpdatePercent()
 	end
 
 	if (home) then
 		UpdateStatus('Enabling Home')
-		table.insert(modTable, {'this%._initialState%.isHomeEnabled', 'true', 1})
-		table.insert(modTable, {'[%w_]+(&&[%w_]+%.default%.createElement%([%w_]+%.default,{isActive:%/%^spotify:app:home%/)', 'true%1', 1})
-		table.insert(modTable, {'[%w_]+%.isHomeEnabled', 'true'})
+		ModJS('zlink', 'main.bundle', {
+			{'this._initialState.isHomeEnabled', 'true'},
+			{'isHomeEnabled(%?void 0:_flowControl)', 'true%1', 1}
+		})
 		UpdatePercent()
 	end
 
 	if (lyric_alwaysShow) then
 		UpdateStatus('Enabling Always show lyrics button')
-		table.insert(modTable, {'(lyricsEnabled%()[%w_]+&&%(.-%)', '%1true', 1})
+		ModJS('zlink', 'main.bundle', {
+			{'(lyricsEnabled%()trackHasLyrics&&%(.-%)', '%1true', 1}
+		})
 		UpdatePercent()
 	end
 
+	local modOptions = ''
+
 	if (vis_highFramerate) then
-		ModJS('lyrics', 'bundle', {
-			{'[%w_]+%.highVisualizationFrameRate=','%1true||', 1}
-		})
+		modOptions = modOptions .. 'trackControllerOpts.highVisualizationFrameRate = true;\n'
 		UpdatePercent()
 	end
 	if (lyric_noSync) then
-		ModJS('lyrics', 'bundle', {
-			{'[%w_]+%.forceNoSyncLyrics=','%1true||', 1}
-		})
+		modOptions = modOptions .. 'lyricsControllerOpts.forceNoSyncLyrics = true;\n'
 		UpdatePercent()
+	end
+
+	if (modOptions ~= '') then
+		ModJS('lyrics', 'bundle', {
+			{'trackController%.init%(trackControllerOpts%)', modOptions .. '%1', 1}
+		})
 	end
 
 	if (experimentalFeatures) then
 		UpdateStatus('Enabling Experimental Features')
-		table.insert(modTable, {'[%w_]+(&&[%w_]+%.default.createElement%([%w_]+%.default,%{name:"experiments)', 'true%1', 1})
+		ModJS('zlink', 'main.bundle', {
+			{'isExperimentalFeaturesEnabled&&', 'true&&', 1}
+		})
 		UpdatePercent()
 	end
 
 	if (fastUserSwitching) then
 		UpdateStatus('Enabling Fast user switching')
-		table.insert(modTable, {'[%w_]+(&&[%w_]+%.default.createElement%([%w_]+%.default,%{name:"switch%-user)', 'true%1', 1})
+		ModJS('zlink', 'main.bundle', {
+			{'isFastUserSwitchingEnabled&&', 'true&&', 1}
+		})
 		UpdatePercent()
 	end
 
@@ -956,16 +951,9 @@ function Finishing()
 	ModInjectExtension('zlink', "#@#JavascriptInject\\", 'spicetifyWrapper.js')
 	ModInjectExtension('zlink', "#@#JavascriptInject\\", 'jquery-3.3.1.min.js')
 
-	UpdateStatus('Leaking useful functions, objects');
-
-	-- Find PlayerUI symbol:
-	local playerUI = findSymbol("playerUI", "zlink", {
-		"([%w_]+)%.prototype.updateProgressBarLabels",
-		"([%w_]+)%.prototype._onConnectionStateChange"
-	})
-
-	if (playerUI ~= nil) then
-		table.insert(modTable, {playerUI .. '%.prototype%.setup=function%(%){', table.concat({'%1',
+	UpdateStatus('Leaking useful functions, objects')
+	ModJS('zlink', 'main.bundle', {
+		{'PlayerUI%.prototype%.setup=function%(%){', table.concat({'%1',
 			'Spicetify.Player.seek=(p)=>{if(p<=1)p=Math.round(p*(Spicetify.Player.data?Spicetify.Player.data.track.metadata.duration:0));this.seek(p)};',
 			'Spicetify.Player.getProgressMs=()=>this.progressbar.getRealValue();',
 			'Spicetify.Player.getProgressPercent=()=>this.progressbar.getPercentage();',
@@ -1000,56 +988,36 @@ function Finishing()
 			'Spicetify.Player.addEventListener=(type,callback)=>{if(!(type in Spicetify.Player.eventListeners)){Spicetify.Player.eventListeners[type]=[]}Spicetify.Player.eventListeners[type].push(callback)};',
 			'Spicetify.Player.removeEventListener=(type,callback)=>{if(!(type in Spicetify.Player.eventListeners)){return}var stack=Spicetify.Player.eventListeners[type];for(var i=0,l=stack.length;i<l;i+=1){if(stack[i]===callback){stack.splice(i,1);return}}};',
 			'Spicetify.Player.dispatchEvent=(event)=>{if(!(event.type in Spicetify.Player.eventListeners)){return true}var stack=Spicetify.Player.eventListeners[event.type];for(var i=0,l=stack.length;i<l;i+=1){stack[i](event)}return!event.defaultPrevented};',
-		}), 1})
+		}), 1},
 
-		-- Register progress change event
-		table.insert(modTable, {playerUI .. '%.prototype%._onProgressBarProgress=function.-%{', '%1Spicetify.Player.dispatchEvent&&Spicetify.Player.dispatchEvent(new Event("onprogress"));', 1})
-	end
-
-	--Leak track meta data, player state, current playlist to Spicetify.Player.data
-	table.insert(modTable, {'(const [%w_]+=([%w_]+)%.track%.metadata;)', '%1Spicetify.Player.data=%2;', 1})
-
-	-- Find Event Dispatcher symbol
-	local eventDispatcher, eventCreator = findSymbol("EventDispatcher", "zlink", {
-		'([%w_]+)%.default%.dispatchEvent%(new ([%w_]+)%.default%([%w_]+.default.NAVIGATION_OPEN_URI',
-		'([%w_]+)%.default%.dispatchEvent%(new ([%w_]+)%.default%("show-notification-bubble"'
+		--Leak track meta data, player state, current playlist to Spicetify.Player.data
+		{'const metadata=data%.track%.metadata;', '%1Spicetify.Player.data=data;', 1},
+		--Leak localStorage and showNotification
+		{'_localStorage2%.default%.get%(SETTINGS_KEY_AD%);', '%1Spicetify.LocalStorage=_localStorage2.default;Spicetify.showNotification = text => {_eventDispatcher2.default.dispatchEvent(new _event2.default(_event2.default.TYPES.SHOW_NOTIFICATION_BUBBLE, {i18n: text}))};', 1},
+		--Leak bridgeAPI
+		{'_bridge=__webpack.-;', '%1Spicetify.BridgeAPI = _bridge;', 1},
+		--Leak audio data fetcher to Spicetify.getAudioData
+		{'PlayerHelper%.prototype%._player=null', table.concat({
+			'var uriToId=u=>{var t=u.match(/^spotify:track:(.*)/);if(!t||t.length<2)return false;else return t[1]};',
+			'Spicetify.getAudioData=(callback, uri)=>{uri=uri||Spicetify.Player.data.track.uri;if(typeof(callback)!=="function"){console.log("Spicetify.getAudioData: callback has to be a function");return;};var id=uriToId(uri);if(id)cosmos.resolver.get(`hm://audio-attributes/v1/audio-analysis/${id}`, (e,p)=>{if(e){console.log(e);callback(null);return;}if(p._status===200&&p._body&&p._body!==""){var data=JSON.parse(p._body);data.uri=uri;callback(data);}else callback(null)})};',
+			'new Player(cosmos.resolver,"spotify:internal:queue","queue","1.0.0").subscribeToQueue((e,r)=>{if(e){console.log(e);return;}Spicetify.Queue=r.getJSONBody();});',
+			'%1'}), 1},
+		{'const Adaptor=function%(bridge,cosmos%)%{', table.concat({'%1',
+			'Spicetify.LibURI = liburi;',
+			'Spicetify.addToQueue=(uri,callback)=>{uri=liburi.from(uri);if(uri.type===liburi.Type.ALBUM){this.getAlbumTracks(uri,(err,tracks)=>{if(err){console.log("Spicetify.addToQueue",err);return};this.queueTracks(tracks,callback)})}else if(uri.type===liburi.Type.TRACK||uri.type===liburi.Type.EPISODE){this.queueTracks([uri],callback)}else{console.log("Spicetify.addToQueue: Only Track, Album, Episode URIs are accepted")}};',
+			'Spicetify.removeFromQueue=(uri,callback)=>{if(Spicetify.Queue){var indices=[],uriObj=liburi.from(uri);if(uriObj.type===liburi.Type.ALBUM){this.getAlbumTracks(uriObj,(err,tracks)=>{if(err){console.log(err);return}tracks.forEach(t=>Spicetify.Queue.next_tracks.forEach((nt,index)=>t==nt.uri&&indices.push(index)))})}else if(uriObj.type===liburi.Type.TRACK||uriObj.type===liburi.Type.EPISODE){Spicetify.Queue.next_tracks.forEach((track,index)=>track.uri==uri&&indices.push(index))}else{console.log("Spicetify.removeFromQueue: Only Album, Track and Episode URIs are accepted")}indices=indices.reduce((a,b)=>{if(a.indexOf(b)<0){a.push(b)}return a},[]);this.removeTracksFromQueue(indices,callback)}};',
+		}), 1},
+		--Register song change event
+		{'this%._uri=track%.uri,this%._trackMetadata=track%.metadata', '%1,Spicetify.Player.dispatchEvent&&Spicetify.Player.dispatchEvent(new Event("songchange"))', 1},
+		--Register play/pause state change event
+		{'this%.playing%(data%.is_playing&&!data%.is_paused%).-;', '%1(this.playing()!==this._isPlaying)&&(this._isPlaying=this.playing(),Spicetify.Player.dispatchEvent&&Spicetify.Player.dispatchEvent(new Event("onplaypause")));', 1},
+		--Register progress change event
+		{'PlayerUI%.prototype%._onProgressBarProgress=function.-%{', '%1Spicetify.Player.dispatchEvent&&Spicetify.Player.dispatchEvent(new Event("onprogress"));', 1},
+		--Leak Cosmos API to Spicetify.cosmosAPI
+		{'var _cosmosApi2=_interop.-;', '%1Spicetify.CosmosAPI=_cosmosApi2.default;', 1},
+		--Leak playbackControl to Spicetify.PlaybackControl
+		{'playbackControl=.-;', '%1Spicetify.PlaybackControl = playbackControl;'},
 	})
-
-	if (eventDispatcher ~= nil) then
-		eventDispatcher = 'Spicetify.showNotification = text => {' .. eventDispatcher .. '.default.dispatchEvent(new ' .. eventCreator .. '.default("show-notification-bubble", {i18n: text}))};'
-	else
-		eventDispatcher = ''
-	end
-
-	-- Leak localStorage and showNotification
-	table.insert(modTable, {'(const [%w_]+=([%w_]+)%.default.get%([%w_]+%);)', '%1Spicetify.LocalStorage=%2.default;' .. eventDispatcher, 1})
-
-	local player, cosmos = findSymbol("player and cosmos in PlayerHelper", "zlink", {
-		'this%._player=new ([%w_]+)%(([%w_]+)%.resolver,"spotify:app:zlink"',
-		'return new ([%w_]+)%(([%w_]+)%.resolver,"spotify:app:zlink","zlink"'
-	})
-
-	-- Subscribe to queue and set data to Spicetify.Queue
-	if (player ~= nil) then
-		table.insert(modTable, {'([%w_]+.prototype._player=null)', ';new ' .. player .. '(' .. cosmos .. '.resolver,"spotify:internal:queue","queue","1.0.0").subscribeToQueue((e,r)=>{if(e){console.log(e);return;}Spicetify.Queue=r.getJSONBody();});%1', 1})
-	end
-
-	table.insert(modTable, {'(const [%w_]+=function%([%w_]+,[%w_]+%){)(this%._bridge)', table.concat({'%1',
-		'Spicetify.addToQueue=(uri,callback)=>{uri=Spicetify.LibURI.from(uri);if(uri.type===Spicetify.LibURI.Type.ALBUM){this.getAlbumTracks(uri,(err,tracks)=>{if(err){console.log("Spicetify.addToQueue",err);return};this.queueTracks(tracks,callback)})}else if(uri.type===Spicetify.LibURI.Type.TRACK||uri.type===Spicetify.LibURI.Type.EPISODE){this.queueTracks([uri],callback)}else{console.log("Spicetify.addToQueue: Only Track, Album, Episode URIs are accepted")}};',
-		'Spicetify.removeFromQueue=(uri,callback)=>{if(Spicetify.Queue){var indices=[],uriObj=Spicetify.LibURI.from(uri);if(uriObj.type===Spicetify.LibURI.Type.ALBUM){this.getAlbumTracks(uriObj,(err,tracks)=>{if(err){console.log(err);return}tracks.forEach(t=>Spicetify.Queue.next_tracks.forEach((nt,index)=>t==nt.uri&&indices.push(index)))})}else if(uriObj.type===Spicetify.LibURI.Type.TRACK||uriObj.type===Spicetify.LibURI.Type.EPISODE){Spicetify.Queue.next_tracks.forEach((track,index)=>track.uri==uri&&indices.push(index))}else{console.log("Spicetify.removeFromQueue: Only Album, Track and Episode URIs are accepted")}indices=indices.reduce((a,b)=>{if(a.indexOf(b)<0){a.push(b)}return a},[]);this.removeTracksFromQueue(indices,callback)}};',
-		';%2'
-	}), 1})
-
-	-- Register play/pause state change event
-	table.insert(modTable, {'this%.playing%([%w_]+%.is_playing&&![%w_]+%.is_paused%).-;', '%1(this.playing()!==this._isPlaying)&&(this._isPlaying=this.playing(),Spicetify.Player.dispatchEvent&&Spicetify.Player.dispatchEvent(new Event("onplaypause")));', 1})
-
-	-- Register song change event
-	table.insert(modTable, {'this%._uri=[%w_]+%.uri,this%._trackMetadata=[%w_]+%.metadata', '%1,Spicetify.Player.dispatchEvent&&Spicetify.Player.dispatchEvent(new Event("songchange"))', 1})
-
-	-- Leak playbackControl to Spicetify.PlaybackControl
-	table.insert(modTable, {',(([%w_]+)%.playFromPlaylistResolver=)', ';Spicetify.PlaybackControl = %2;%1'})
-
-	ModJS('zlink', 'zlink.bundle', modTable)
 
 	local actExtension = Extension_ParseActivated()
 	for k, v in pairs(extensionTable) do
@@ -1506,20 +1474,14 @@ function App_CopyRountine(appIndex)
 		appPageLogger, appMenuItems = {}, {}
 	end
 
-	local react, sidebarList = findSymbol('React and SidebarList', 'zlink', {
-		'([%w_]+)%.default%.createElement%(([%w_]+)%.default,%{title:[%w_]+%.default%.get%("your_music%.app_name"%)',
-		'([%w_]+)%.default%.createElement%(([%w_]+)%.default,%{interactionId:"main"%}'
-	})
-
-	local sidebarElement, lastRequestedPageUri = findSymbol('Last Requested Page URI', 'zlink', {
-		'([%w_]+)%.default,{isActive:/%^spotify:app:home/%.test%(([%w_]+)%)'
-	})
-
 	if appIndex > #appTable then
-		ModJS('zlink', 'zlink.bundle', {
-			{'[%w_]+%.default%.createElement%([%w_]+%.default,%{title:[%w_]+%.default%.get%("your_music%.app_name"',
-			react .. '.default.createElement(' .. sidebarList .. '.default,{title:"Your app"},'
-				.. table.concat(appMenuItems, ",") .. ')),' .. react .. '.default.createElement("div",{className:"LeftSidebar__section"},%1', 1}
+		ModJS('zlink', 'main.bundle', {
+			{'PAGE_LOGGER_MAP=%{', '%1' .. table.concat(appPageLogger), 1},
+			{'(return _pageIdentifiers2%.default%[normalizedAppId%]||)(_pageIdentifiers2%.default%.unknownUncovered)',
+			'%1normalizedAppId||%2', 1},
+			{'_react2%.default%.createElement%(_SidebarList2%.default,%{title:_i18n2%.default%.get%("your_music%.app_name"',
+			'_react2.default.createElement(_SidebarList2.default,{title:"Your app"},'
+				.. table.concat(appMenuItems, ",") .. ')),_react2.default.createElement("div",{className:"LeftSidebar__section"},%1', 1}
 		})
 		appPageLogger, appMenuItems = nil, nil
 		Succeeded()
@@ -1545,7 +1507,7 @@ function App_CopyRountine(appIndex)
 		))
 
 		table.insert(appMenuItems, table.concat(
-			{react .. '.default.createElement(' .. sidebarElement .. '.default,{isActive:/^spotify:app:', app.file,'(\\:.*)?$/.test(' .. lastRequestedPageUri ..'),isBold:!0,label:"', app.name, '",uri:"spotify:app:', app.file, '"})'}
+			{'_react2.default.createElement(_SidebarListItem2.default,{isActive:/^spotify:app:', app.file,'(\\:.*)?$/.test(lastRequestedPageUri),isBold:!0,label:"', app.name, '",uri:"spotify:app:', app.file, '"})'}
 		))
 
 		SKIN:Bang('!CommandMeasure', 'CopyApp', 'Run')
@@ -1674,9 +1636,6 @@ function DevTool_Button()
 end
 
 function DevTool_Toggle(enable)
-	SKIN:Bang('!WriteKeyValue', 'Variables', 'DevTool', enable and 1 or 0)
-	SKIN:Bang('!SetVariable', 'DevTool', enable and 1 or 0)
-	ParseCoreSetting()
 	local prefsFilePath = SKIN:ReplaceVariables("%appdata%\\Spotify\\prefs")
 	local f = io.open(prefsFilePath, "r")
 	if (f) then
