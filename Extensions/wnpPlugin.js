@@ -55,10 +55,11 @@ o888o   o888o o888ooooood8 o888ooooood8 o888o        o888ooooood8 o888o  o888o 8
 
     /**
      * //Convert seconds to a time string acceptable to Rainmeter
-     * @param {number} timeInSeconds
+     * @param {number} timeInMs
      */
-    function convertTimeToString(timeInSeconds) {
-        var timeInMinutes = Math.floor(timeInSeconds / 60);
+    function convertTimeToString(timeInMs) {
+        const timeInSeconds = Math.round(timeInMs / 1000);
+        const timeInMinutes = Math.floor(timeInSeconds / 60);
         if (timeInMinutes < 60) {
             return timeInMinutes + ":" + pad(timeInSeconds % 60, 2);
         }
@@ -361,11 +362,11 @@ oo     .d8P  888       o      888       `88.    .8'   888
             }
         };
 
-        musicInfo.durationString = () =>
-            convertTimeToString(Spicetify.Player.getDuration() / 1000);
+        musicInfo.duration = () =>
+            convertTimeToString(Spicetify.Player.getDuration());
 
-        musicInfo.positionString = () =>
-            convertTimeToString(Spicetify.Player.getProgressMs() / 1000);
+        musicInfo.position = () =>
+            convertTimeToString(Spicetify.Player.getProgressMs());
 
         musicInfo.volume = () =>
             Math.round(Spicetify.Player.getVolume() * 100);
