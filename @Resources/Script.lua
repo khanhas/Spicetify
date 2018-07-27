@@ -146,7 +146,7 @@ function Initialize()
 				rawColor = '8a4fff'
 			else
 				file = io.open(colorFilePath, 'w+')
-				file:write(defaultSpotifyColorScheme_Inc)
+				file:write(defaultSpotifyColor_Inc)
 				file:close()
 				SKIN:Bang('!Refresh')
 				return
@@ -765,7 +765,7 @@ end
 
 function ThemeNewContent()
 	local file = io.open(newThemeFolder .. '\\color.inc', 'w+')
-	file:write(defaultSpotifyColorScheme_Inc)
+	file:write(defaultSpotifyColor_Inc)
 	file:close()
 
 	file = io.open(newThemeFolder .. '\\user.css', 'w+')
@@ -853,10 +853,10 @@ function CopyUserCSS()
 		local u = ''
 		if (css) then
 			u = css:read('*a')
+			css:close()
 		else
 			print('user.css is not found in theme folder. Please make one.')
 		end
-		css:close()
 		table.insert(d, u)
 	end
 	for _, v in pairs({"zlink", "login"}) do
