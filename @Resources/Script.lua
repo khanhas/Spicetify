@@ -1047,7 +1047,10 @@ function Finishing()
 	table.insert(modTable, {'this%._uri=[%w_]+%.uri,this%._trackMetadata=[%w_]+%.metadata', '%1,Spicetify.Player.dispatchEvent&&Spicetify.Player.dispatchEvent(new Event("songchange"))', 1})
 
 	-- Leak playbackControl to Spicetify.PlaybackControl
-	table.insert(modTable, {',(([%w_]+)%.playFromPlaylistResolver=)', ';Spicetify.PlaybackControl = %2;%1'})
+	table.insert(modTable, {',(([%w_]+)%.playFromPlaylistResolver=)', ';Spicetify.PlaybackControl = %2;%1', 1})
+
+	-- Disable expose function restriction
+	table.insert(modTable, {'(expose=function.-)([%w_]+%.__spotify&&[%w_]+%.__spotify%.developer_mode&&)', '%1', 1})
 
 	ModJS('zlink', 'zlink.bundle', modTable)
 
