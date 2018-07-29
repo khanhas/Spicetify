@@ -15,8 +15,6 @@
         "cover",
         "duration",
         "position",
-        "durationString",
-        "positionString",
         "volume",
         "rating",
         "repeat",
@@ -35,6 +33,7 @@
     let ws;
     let musicEvents = {};
     let musicInfo = {};
+    let currState = 0
 
     /*
 ooooo   ooooo oooooooooooo ooooo        ooooooooo.   oooooooooooo ooooooooo.    .oooooo..o
@@ -327,7 +326,7 @@ oo     .d8P  888       o      888       `88.    .8'   888
 
         musicInfo.readyCheck = () => (Spicetify.Player.data ? true : false);
 
-        musicInfo.state = () => (Spicetify.Player.isPlaying() ? 1 : 0);
+        musicInfo.state = () => (Spicetify.Player.isPlaying() ? 1 : 2);
 
         musicInfo.title = () =>
             Spicetify.Player.data.track.metadata.title || "N/A";
