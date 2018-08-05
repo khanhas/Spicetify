@@ -26,6 +26,7 @@
     - [WebNowPlaying Companion](https://github.com/khanhas/Spicetify#webnowplaying-companion)
 - [Apps](https://github.com/khanhas/Spicetify#apps)
     - [Reddit](https://github.com/khanhas/Spicetify#reddit)
+- [Community themes](https://github.com/khanhas/Spicetify#community-themes)
 - [How it works](https://github.com/khanhas/Spicetify#how-it-works)
 - [How to contribute](https://github.com/khanhas/Spicetify#how-to-contribute)
 - [Credits](https://github.com/khanhas/Spicetify#credits)
@@ -102,6 +103,12 @@ Fetching top 100 Spotify posts in any subreddit. This app has native feels and b
 
 Check out [App wiki page](https://github.com/khanhas/Spicetify/wiki/App) for some app making tips.
 
+## Community themes
+
+## [Thicktify](https://github.com/8roly/thicktify) by [8roly](https://www.deviantart.com/8roly)
+
+![thicktify](https://raw.githubusercontent.com/8roly/thicktify/master/002_home.png)
+
 ## How it works
 Spotify UI is HTML/CSS and runs inside Chromium Embedded Framework<sup>[[1]](https://www.quora.com/How-is-JavaScript-used-within-the-Spotify-desktop-application-Is-it-packaged-up-and-run-locally-only-retrieving-the-assets-as-and-when-needed-What-JavaScript-VM-is-used)</sup>. All CSS files controlling element attributes and interaction are packed in SPA files (they basically are ZIP).  
 
@@ -124,5 +131,5 @@ Everything you need to run is already in repo.
 3. (Optional) Install `Nodejs` and `yarn` to run/install some tools and scripts that make development process easier.  
 
 ## Credits
-Thanks ![**actionless**](https://github.com/actionless) for his ![oomoxify](https://github.com/actionless/oomoxify/blob/master/oomoxify.sh) script that this skin is based on.
-Thanks ![**tjhrulz**](https://github.com/tjhrulz) for his ![WebNowPlaying Browser Extension](https://github.com/tjhrulz/WebNowPlaying-BrowserExtension) and ![MessagePassing plugin](https://github.com/tjhrulz/MessagePassingForRainmeter).
+Thanks ![**actionless**](https://github.com/actionless) for his ![oomoxify](https://github.com/actionless/oomoxify/blob/master/oomoxify.sh) script that this skin is based on.  
+Thanks ![**tjhrulz**](https://github.com/tjhrulz) for his ![WebNowPlaying Browser Extension](https://github.com/tjhrulz/WebNowPlaying-BrowserExtension) and ![MessagePassing plugin](https://github.com/tjhrulz/MessagePassingForRainmeter).  
