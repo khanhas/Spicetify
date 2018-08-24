@@ -21,14 +21,14 @@
         Spicetify.LocalStorage.set("DJMode", JSON.stringify(DJSetting));
     }
 
-    var menuEl = $("#GluePopoverMenu-container");
+    var menuEl = $("#PopoverMenu-container");
 
     // Observing profile menu
     var menuObserver = new MutationObserver(() => {
-        const innerMenu = menuEl.find(".GlueMenu__root-items");
+        const innerMenu = menuEl.find(".Menu__root-items");
         innerMenu.prepend(
             `<div
-    class="GlueMenuItem GlueMenuItem--has-submenu"
+    class="MenuItem MenuItem--has-submenu"
     role="menuitem"
     data-submenu="true"
     tabindex="-1"
@@ -39,12 +39,12 @@
     DJ Mode
     <div
         id="DJModeSubMenu"
-        class="GlueMenu GlueMenu--is-submenu"
+        class="Menu Menu--is-submenu"
         role="menuitem"
         tabindex="-1"
     >
-        <button class="GlueMenuItem .GlueMenuItem--is-active${
-            DJSetting.enabled ? " GlueMenuItemToggle--checked" : ""
+        <button class="MenuItem ${
+            DJSetting.enabled ? "MenuItemToggle--checked MenuItem--is-active" : ""
         }"
             role="menuitem"
             data-submenu="false"
@@ -54,9 +54,9 @@
                 Enabled
         </button>
         <button
-            class="GlueMenuItem .GlueMenuItem--is-active${
+            class="MenuItem ${
                 DJSetting.enabled && DJSetting.hideControls
-                    ? " GlueMenuItemToggle--checked"
+                    ? "MenuItemToggle--checked MenuItem--is-active"
                     : ""
             }"
             role="menuitem"
@@ -72,7 +72,7 @@
         const menu = $("#DJModeMenu");
         menu.on("mouseover", () => {
             $("#DJModeSubMenu").addClass("open");
-            $(".GlueMenuItem").removeClass("selected");
+            $(".MenuItem").removeClass("selected");
             menu.addClass("selected");
         });
         menu.on("mouseleave", () => {
@@ -91,11 +91,11 @@
             Spicetify.LocalStorage.set("DJMode", JSON.stringify(DJSetting));
             if (DJSetting.hideControls) {
                 $("#DJModeToggleControl").addClass(
-                    "GlueMenuItemToggle--checked"
+                    "MenuItemToggle--checked MenuItem--is-active"
                 );
             } else {
                 $("#DJModeToggleControl").removeClass(
-                    "GlueMenuItemToggle--checked"
+                    "MenuItemToggle--checked MenuItem--is-active"
                 );
             }
         });

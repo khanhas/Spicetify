@@ -16,14 +16,14 @@
 
     let ChristianMode = Spicetify.LocalStorage.get("ChristianMode") === "true";
 
-    let menuEl = $("#GluePopoverMenu-container");
+    let menuEl = $("#PopoverMenu-container");
 
     // Observing profile menu
     let menuObserver = new MutationObserver(() => {
-        const innerMenu = menuEl.find(".GlueMenu__root-items");
+        const innerMenu = menuEl.find(".Menu__root-items");
         innerMenu.prepend(
             `<div
-    class="GlueMenuItem${ChristianMode ? " GlueMenuItemToggle--checked" : ""}"
+    class="MenuItem${ChristianMode ? " MenuItemToggle--checked MenuItem--is-active" : ""}"
     id="ChristianModeToggle"
     data-menu-item="christian-mode"
     role="menuitemradio"
@@ -44,9 +44,9 @@
                 JSON.stringify(ChristianMode)
             );
             if (ChristianMode) {
-                toggle.addClass("GlueMenuItemToggle--checked");
+                toggle.addClass("MenuItemToggle--checked MenuItem--is-active");
             } else {
-                toggle.removeClass("GlueMenuItemToggle--checked");
+                toggle.removeClass("MenuItemToggle--checked MenuItem--is-active");
             }
         });
     });
