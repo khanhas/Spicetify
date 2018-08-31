@@ -208,6 +208,7 @@ function ParseCoreSetting()
 	fastUserSwitching = SKIN:GetVariable("FastUserSwitching") == '1'
 	logging = SKIN:GetVariable("DisableUILogging") == '1'
 	devTool = SKIN:GetVariable("DevTool") == '1'
+	removeRTLRule = SKIN:GetVariable("RemoveRTLRule") == '1'
 end
 
 liveUpdate = false
@@ -263,11 +264,13 @@ function UpdateInitStatus()
 		else
 			SKIN:Bang('!ShowMeterGroup', 'BackupButton')
 			SKIN:Bang('!ShowMeterGroup', 'Preprocess')
+			SKIN:Bang('!HideMeterGroup', 'CoreSettings')
 			UpdateStatus('Please backup first', 'ok')
 		end
 	else
 		SKIN:Bang('!HideMeterGroup', 'BackupButton')
 		SKIN:Bang('!HideMeterGroup', 'Preprocess')
+		SKIN:Bang('!ShowMeterGroup', 'CoreSettings')
 		if (UpdateSpotifyFolderStatus()) then
 			SKIN:Bang('!SetOption', 'ApplyButtonText', 'Text', 'Re-apply')
 			UpdateStatus('Ready', 'ok')
@@ -359,63 +362,25 @@ end
 function Unzip()
 	--Pre-process
 	if (nX) then
-		local p = "#@#Extracted\\Raw\\" .. nX .. "\\bundle.js"
-		local altP = "#@#Extracted\\Raw\\" .. nX .. "\\" .. nX .. ".bundle.js"
+		local p = "#@#Extracted\\Raw\\" .. nX .. "\\" .. nX .. ".bundle.js"
 		if (sentry) then
-			function disableSentry(d)
-				d = d:gsub('sentry%.install%(%)[,;]', '', 1)
-				d = d:gsub('"https://%w+@sentry.io/%d+"', '"https://NO@TELEMETRY.IS/BAD"')
-				return d
-			end
-
 			UpdateStatus("Removing Sentry of " .. n)
-			if (not fileUtil(p, disableSentry)) then
-				fileUtil(altP, disableSentry)
-			end
+			fileUtil(p, disableSentry)
 		end
 
-		if (logging and (
-			nX == "browse" or nX == "collection" or
-			nX == "genre" or nX == "hub" or
-			nX == "zlink" or nX == "lyrics" or
-			nX == "playlist"
-		)) then
-			function disableLogging(d)
-				if (nX == "browse" or nX == "collection" or
-					nX == "genre" or nX == "hub") then
-					UpdateStatus("Removing UI logger of " .. n)
-					d =d:gsub('logUIInteraction5%([%w_]+,[%w_]+%)%{', '%1return;', 1)
-						:gsub('logUIImpression5%([%w_]+,[%w_]+%)%{', '%1return;', 1)
-						:gsub('_logUIInteraction5%([%w_]+%)%{', '%1return;', 1)
-						:gsub('_logUIImpression5%([%w_]+%)%{', '%1return;', 1)
-						:gsub('this%._documentFragment%.query%(\'%[data%-log%-click%]\'%)', 'return;%1')
-						:gsub('_onClickDataLogClick%([%w_]+%)%{', '%1return;')
-						:gsub('_setUpStandardImpressionLogging%(%)%{', '%1return;')
-				end
+		if (logging) then
+			UpdateStatus("Removing UI logger of " .. n)
+			fileUtil(p, disableLogging)
+		end
 
-				if (nX == "zlink") then
-					UpdateStatus("Removing UI logger of " .. n)
-					d = d:gsub('prototype._logUIInteraction5=function%(.-%){', '%1return;')
-				end
+		if (removeRTLRule) then
+			UpdateStatus("Removing Right-To-Left style rules of " .. n)
 
-				if (nX == "lyrics") then
-					UpdateStatus("Removing UI logger of " .. n)
-					d = d:gsub('LoggingService%.prototype%..-%{', '%1return;')
-				end
-
-				if (nX == "playlist") then
-					UpdateStatus("Removing UI logger of " .. n)
-					d = d:gsub('(exports%.logPlaylistImpression=)[%w_]+', '%1()=>{}', 1)
-						 :gsub('(exports%.logEndOfListImpression=)[%w_]+', '%1()=>{}', 1)
-						 :gsub('(exports%.logListQuickJump=)[%w_]+', '%1()=>{}', 1)
-						 :gsub('(exports%.logListItemSelected=)[%w_]+', '%1()=>{}', 1)
-						 :gsub('(exports%.logFeedbackInteraction=)[%w_]+', '%1()=>{}', 1)
-				end
-				return d
-			end
-
-			if (not fileUtil(p, disableLogging)) then
-				fileUtil(altP, disableLogging)
+			local mainCSS = "#@#Extracted\\Raw\\" .. nX .. "\\css\\main.css"
+			fileUtil(mainCSS, removeRTL)
+			if (nX == "zlink" or nX == "login") then
+				local glueCSS = "#@#Extracted\\Raw\\" .. nX .. "\\css\\glue.css"
+				fileUtil(glueCSS, removeRTL)
 			end
 		end
 
@@ -457,6 +422,58 @@ function Unzip()
 
 	SKIN:Bang('!UpdateMeasure', 'Unzip')
 	SKIN:Bang('!CommandMeasure', 'Unzip', 'Run')
+end
+
+function disableSentry(d)
+	d =d:gsub('sentry%.install%(%)[,;]', '', 1)
+		:gsub('"https://%w+@sentry.io/%d+"', '"https://NO@TELEMETRY.IS/BAD"')
+	return d
+end
+
+function disableLogging(d)
+	d = d:gsub('data%-log%-click="[%w%-]+"', '')
+	d = d:gsub('data%-log%-context="[%w%-]+"', '')
+
+	if (nX == "browse" or nX == "collection" or
+		nX == "genre" or nX == "hub") then
+		d =d:gsub('logUIInteraction5%([%w_]+,[%w_]+%)%{', '%1return;', 1)
+			:gsub('logUIImpression5%([%w_]+,[%w_]+%)%{', '%1return;', 1)
+			:gsub('_logUIInteraction5%([%w_]+%)%{', '%1return;', 1)
+			:gsub('_logUIImpression5%([%w_]+%)%{', '%1return;', 1)
+			:gsub('this%._documentFragment%.query%(\'%[data%-log%-click%]\'%)', 'return;%1')
+			:gsub('_onClickDataLogClick%([%w_]+%)%{', '%1return;')
+			:gsub('_setUpStandardImpressionLogging%(%)%{', '%1return;')
+	end
+
+	if (nX == "zlink") then
+		d = d:gsub('prototype._logUIInteraction5=function%(.-%){', '%1return;')
+	end
+
+	if (nX == "lyrics") then
+		d = d:gsub('LoggingService%.prototype%..-%{', '%1return;')
+	end
+
+	if (nX == "playlist") then
+		d = d:gsub('(exports%.logPlaylistImpression=)[%w_]+', '%1()=>{}', 1)
+			 :gsub('(exports%.logEndOfListImpression=)[%w_]+', '%1()=>{}', 1)
+			 :gsub('(exports%.logListQuickJump=)[%w_]+', '%1()=>{}', 1)
+			 :gsub('(exports%.logListItemSelected=)[%w_]+', '%1()=>{}', 1)
+			 :gsub('(exports%.logFeedbackInteraction=)[%w_]+', '%1()=>{}', 1)
+	end
+	return d
+end
+
+
+function removeRTL(d)
+	d =d:gsub(",%s?%[dir=rtl%].-(%{.-%})", "%1")
+		:gsub("%[dir=rtl%].-%{.-%}", "")
+		:gsub("%[dir=ltr%]", "")
+		:gsub("%[dir%]", "")
+		:gsub(",%s?%[lang=ar%].-(%{.-%})", "%1")
+		:gsub("%[lang=ar%].-%{.-%}", "")
+		:gsub("%[dir=\"rtl\"%].-%{.-%}", "")
+		:gsub("html%[dir=\"rtl\"%].-%{.-%}", "")
+	return d
 end
 
 function Duplicate()
@@ -516,19 +533,19 @@ function PrepareCSS()
 		d = d:gsub("#121212", "var(--modspotify_main_bg)")
 		d = d:gsub("#999999", "var(--modspotify_main_bg)")
 		d = d:gsub("#606060", "var(--modspotify_main_bg)")
-		d = d:gsub("rgba%(18, 18, 18, ([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
+		d = d:gsub("rgba%(18,%s?18,%s?18,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
 		d = d:gsub("#181818", "var(--modspotify_sidebar_and_player_bg)")
-		d = d:gsub("rgba%(18,19,20,([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
+		d = d:gsub("rgba%(18,%s?19,%s?20,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
 		d = d:gsub("#000000", "var(--modspotify_sidebar_and_player_bg)")
 		d = d:gsub("#333333", "var(--modspotify_scrollbar_fg_and_selected_row_bg)")
 		d = d:gsub("#3f3f3f", "var(--modspotify_scrollbar_fg_and_selected_row_bg)")
 		d = d:gsub("#535353", "var(--modspotify_scrollbar_fg_and_selected_row_bg)")
 		d = d:gsub("#404040", "var(--modspotify_slider_bg)")
-		d = d:gsub("rgba%(80,55,80,([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
-		d = d:gsub("rgba%(40, 40, 40, ([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
-		d = d:gsub("rgba%(40,40,40,([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
-		d = d:gsub("rgba%(24, 24, 24, ([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
-		d = d:gsub("rgba%(18, 19, 20, ([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
+		d = d:gsub("rgba%(80,%s?55,%s?80,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
+		d = d:gsub("rgba%(40,%s?40,%s?40,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
+		d = d:gsub("rgba%(40,%s?40,%s?40,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
+		d = d:gsub("rgba%(24,%s?24,%s?24,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
+		d = d:gsub("rgba%(18,%s?19,%s?20,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
 		d = d:gsub("#000011", "var(--modspotify_sidebar_and_player_bg)")
 		d = d:gsub("#0a1a2d", "var(--modspotify_sidebar_and_player_bg)")
 		d = d:gsub("#ffffff", "var(--modspotify_main_fg)")
@@ -545,37 +562,28 @@ function PrepareCSS()
 		d = d:gsub("#bababa", "var(--modspotify_secondary_fg)")
 		d = d:gsub("#b3b3b3", "var(--modspotify_secondary_fg)")
 		d = d:gsub("#c0c0c0", "var(--modspotify_secondary_fg)")
-		d = d:gsub("rgba%(179, 179, 179, ([%d%.]+)%)", "rgba(var(--modspotify_rgb_secondary_fg),%1)")
+		d = d:gsub("rgba%(179,%s?179,%s?179,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_secondary_fg),%1)")
 		d = d:gsub("#cccccc", "var(--modspotify_pressing_button_fg)")
 		d = d:gsub("#ededed", "var(--modspotify_pressing_button_fg)")
 		d = d:gsub("#4687d6", "var(--modspotify_miscellaneous_bg)")
-		d = d:gsub("rgba%(70, 135, 214, ([%d%.]+)%)", "rgba(var(--modspotify_rgb_miscellaneous_bg),%1)")
+		d = d:gsub("rgba%(70,%s?135,%s?214,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_miscellaneous_bg),%1)")
 		d = d:gsub("#2e77d0", "var(--modspotify_miscellaneous_hover_bg)")
-		d = d:gsub("rgba%(51,153,255,([%d%.]+)%)", "rgba(var(--modspotify_rgb_miscellaneous_hover_bg),%1)")
-		d = d:gsub("rgba%(30,50,100,([%d%.]+)%)", "rgba(var(--modspotify_rgb_miscellaneous_hover_bg),%1)")
-		d = d:gsub("rgba%(24, 24, 24, ([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
-		d = d:gsub("rgba%(25,20,20,([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
-		d = d:gsub("rgba%(160, 160, 160, ([%d%.]+)%)", "rgba(var(--modspotify_rgb_pressing_button_fg),%1)")
-		d = d:gsub("rgba%(255, 255, 255, ([%d%.]+)%)", "rgba(var(--modspotify_rgb_pressing_button_fg),%1)")
-		d = d:gsub("#ddd;", "var(--modspotify_pressing_button_fg);")
-		d = d:gsub("#000;", "var(--modspotify_sidebar_and_player_bg);")
-		d = d:gsub("#000 ", "var(--modspotify_sidebar_and_player_bg) ")
-		d = d:gsub("#333;", "var(--modspotify_scrollbar_fg_and_selected_row_bg);")
-		d = d:gsub("#333 ", "var(--modspotify_scrollbar_fg_and_selected_row_bg) ")
-		d = d:gsub("#444;", "var(--modspotify_slider_bg);")
-		d = d:gsub("#444 ", "var(--modspotify_slider_bg) ")
-		d = d:gsub("#fff;", "var(--modspotify_main_fg);")
-		d = d:gsub("#fff ", "var(--modspotify_main_fg) ")
-		d = d:gsub(" black;", " var(--modspotify_sidebar_and_player_bg);")
-		d = d:gsub(" black ", " var(--modspotify_sidebar_and_player_bg) ")
-		d = d:gsub(" gray ", " var(--modspotify_main_bg) ")
-		d = d:gsub(" gray;", " var(--modspotify_main_bg);")
-		d = d:gsub(" lightgray ", " var(--modspotify_pressing_button_fg) ")
-		d = d:gsub(" lightgray;", " var(--modspotify_pressing_button_fg);")
-		d = d:gsub(" white;", " var(--modspotify_main_fg);")
-		d = d:gsub(" white ", " var(--modspotify_main_fg) ")
-		d = d:gsub("rgba%(0, 0, 0, ([%d%.]+)%)", "rgba(var(--modspotify_rgb_cover_overlay_and_shadow),%1)")
-		d = d:gsub("rgba%(0,0,0,([%d%.]+)%)", "rgba(var(--modspotify_rgb_cover_overlay_and_shadow),%1)")
+		d = d:gsub("rgba%(51,%s?153,%s?255,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_miscellaneous_hover_bg),%1)")
+		d = d:gsub("rgba%(30,%s?50,%s?100,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_miscellaneous_hover_bg),%1)")
+		d = d:gsub("rgba%(24,%s?24,%s?24,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
+		d = d:gsub("rgba%(25,%s?20,%s?20,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_sidebar_and_player_bg),%1)")
+		d = d:gsub("rgba%(160,%s?160,%s?160,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_pressing_button_fg),%1)")
+		d = d:gsub("rgba%(255,%s?255,%s?255,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_pressing_button_fg),%1)")
+		d = d:gsub("#ddd", "var(--modspotify_pressing_button_fg)")
+		d = d:gsub("#000", "var(--modspotify_sidebar_and_player_bg)")
+		d = d:gsub("#333", "var(--modspotify_scrollbar_fg_and_selected_row_bg)")
+		d = d:gsub("#444", "var(--modspotify_slider_bg)")
+		d = d:gsub("#fff", "var(--modspotify_main_fg)")
+		d = d:gsub("black;", " var(--modspotify_sidebar_and_player_bg)")
+		d = d:gsub("gray;", " var(--modspotify_main_bg)")
+		d = d:gsub("lightgray;", " var(--modspotify_pressing_button_fg)")
+		d = d:gsub("white;", " var(--modspotify_main_fg)")
+		d = d:gsub("rgba%(0,%s?0,%s?0,%s?([%d%.]+)%)", "rgba(var(--modspotify_rgb_cover_overlay_and_shadow),%1)")
 		d = d:gsub("#fff", "var(--modspotify_main_fg)")
 		d = d:gsub("#000", "var(--modspotify_sidebar_and_player_bg)")
 
