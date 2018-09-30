@@ -53,7 +53,9 @@
         const uriType = uriObj.type;
         if (uriType === "playlist") {
             playlistShuffle(contextURI);
-        } else if (uriType === "collection") {
+        } else if (uriType === "folder") {
+            folderShuffle(contextURI);
+        }else if (uriType === "collection") {
             collectionShuffle();
         } else if (uriType === "album") {
             albumShuffle(contextURI);
@@ -85,28 +87,81 @@
         setQueue(shuffle(replace));
     }
 
+    function requestPlaylist(uri) {
+        return new Promise((resolve, reject) => {
+            Spicetify.BridgeAPI.cosmosJSON(
+                {
+                    method: "GET",
+                    uri: `sp://core-playlist/v1/playlist/${uri}/rows`,
+                    body: {
+                        policy: {
+                            link: true,
+                        },
+                    },
+                },
+                (error, res) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+
+                    let replace = res.rows;
+                    replace = replace.map((item) => ({
+                        uri: item.link,
+                    }));
+
+                    resolve(replace);
+                }
+            );
+        })
+    }
+
     function playlistShuffle(uri) {
+        requestPlaylist(uri)
+            .then((res) => setQueue(shuffle(res)))
+            .catch((error) => console.error("Playlist Shuffle:", error));
+    }
+
+    function folderShuffle(uri) {
         Spicetify.BridgeAPI.cosmosJSON(
             {
                 method: "GET",
-                uri: `sp://core-playlist/v1/playlist/${uri}/rows`,
+                uri: `sp://core-playlist/v1/rootlist`,
                 body: {
                     policy: {
-                        link: true,
+                        folder: {
+                            rows: true,
+                            link: true,
+                        },
                     },
                 },
             },
             (error, res) => {
                 if (error) {
-                    console.log("playlistShuffle", error);
+                    console.error("Folder Shuffle:", error);
                     return;
                 }
-                let replace = res.rows;
-                replace = replace.map((item) => ({
-                    uri: item.link,
-                }));
 
-                setQueue(shuffle(replace));
+                const requestFolder = res.rows.filter((item) => item.link === uri);
+
+                if (requestFolder === 0) {
+                    console.error("Folder Shuffle: Cannot find folder")
+                    return;
+                }
+
+                const requestPlaylists = requestFolder[0].rows
+                    .map((item) => requestPlaylist(item.link));
+                Promise.all(requestPlaylists)
+                    .then((playlists) => {
+                        const trackList = [];
+
+                        playlists.forEach((p) => {
+                            trackList.push(...p);
+                        });
+
+                        setQueue(shuffle(trackList));
+                    })
+                    .catch((error) => console.error("Folder Shuffle:", error));
             }
         );
     }
