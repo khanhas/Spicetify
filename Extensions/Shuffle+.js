@@ -1,7 +1,7 @@
 // START METADATA
 // NAME: Shuffle+
 // AUTHOR: khanhas
-// DESCRIPTION: True shuffle wtih no bias.
+// DESCRIPTION: True shuffle with no bias.
 // END METADATA
 
 /// <reference path="../globals.d.ts" />
@@ -13,7 +13,7 @@
     // Queue shuffle buttons
     const QUEUE_SHUFFLE = `<button class="button button-green shufflePlusQueue">Shuffle Queue</button>`;
 
-    // Text of notifcation when queue is shuffled sucessfully
+    // Text of notification when queue is shuffled sucessfully
     const NOTIFICATION_TEXT = (count) => `Shuffled ${count} items!`;
 
     // Whether Shuffer Queue should show.
@@ -26,46 +26,51 @@
 
     const interval = setInterval(() => {
         const curActive = $("iframe.active");
-        if (curActive.length > 0) {
-            var curURI = curActive.attr("data-app-uri");
-            if (curURI === "spotify:app:queue") {
-                const doc = curActive.contents();
-                if (!doc) return;
-
-                const header = doc.find(".glue-page-header__buttons");
-
-                header.append(CONTEXT_SHUFFLE);
-                header.find(".shufflePlusContext").click(contextShuffle);
-
-                if (showShuffleQueueButton) {
-                    header.append(QUEUE_SHUFFLE);
-                    header.find(".shufflePlusQueue").click(queueShuffle);
-                }
-
-                clearInterval(interval);
-            }
+        if (curActive.length === 0) {
+            return;
         }
+
+        var curURI = curActive.attr("data-app-uri");
+        if (curURI !== "spotify:app:queue") {
+            return;
+        }
+
+        const doc = curActive.contents();
+        if (!doc) return;
+
+        const header = doc.find(".glue-page-header__buttons");
+
+        header.append(CONTEXT_SHUFFLE);
+        header.find(".shufflePlusContext").click(contextShuffle);
+
+        if (showShuffleQueueButton) {
+            header.append(QUEUE_SHUFFLE);
+            header.find(".shufflePlusQueue").click(queueShuffle);
+        }
+
+        clearInterval(interval);
     }, 1000);
 
     function contextShuffle() {
         const contextURI = Spicetify.Player.data.context_uri;
         const uriObj = Spicetify.LibURI.from(contextURI);
-        const uriType = uriObj.type;
-        if (uriType === "playlist") {
-            playlistShuffle(contextURI);
-        } else if (uriType === "folder") {
-            folderShuffle(contextURI);
-        }else if (uriType === "collection") {
-            collectionShuffle();
-        } else if (uriType === "album") {
-            albumShuffle(contextURI);
-        } else if (uriType === "show") {
-            showShuffle(uriObj._base62Id);
-        } else {
-            Spicetify.showNotification &&
-            Spicetify.showNotification(
-                    `Unsupported context URI type: ${uriType}`
-                );
+
+        switch (uriObj.type) {
+            case "show":
+                showShuffle(uriObj._base62Id); break;
+            case "playlist":
+                playlistShuffle(contextURI); break;
+            case "folder":
+                folderShuffle(contextURI); break;
+            case "album":
+                albumShuffle(contextURI); break;
+            case "collection":
+                collectionShuffle(); break;
+            default:
+                Spicetify.showNotification &&
+                    Spicetify.showNotification(
+                        `Unsupported context URI type: ${uriType}`
+                    );
         }
     }
 
@@ -142,7 +147,8 @@
                     return;
                 }
 
-                const requestFolder = res.rows.filter((item) => item.link === uri);
+                const requestFolder = res.rows
+                    .filter((item) => item.link === uri);
 
                 if (requestFolder === 0) {
                     console.error("Folder Shuffle: Cannot find folder")
@@ -198,7 +204,7 @@
         const arg = [uri, 0, -1];
         Spicetify.BridgeAPI.request("album_tracks_snapshot", arg, (error, res) => {
             if (error) {
-                console.log("albumShuffle", error);
+                console.error("Album Shuffle: ", error);
                 return;
             }
             let replace = res.array;
@@ -217,7 +223,7 @@
             },
             (error, res) => {
                 if (error) {
-                    console.log("showShuffle", error);
+                    console.error("Shows Shuffle:", error);
                     return;
                 }
                 let replace = res.getJSONBody().items;
