@@ -19,14 +19,11 @@
         "rating",
         "repeat",
         "shuffle",
-        "trackID",
-        "artistID",
-        "albumID",
     ];
 
     const currentMusicInfo = {};
 
-    INFO_LIST.forEach(field => {
+    INFO_LIST.forEach((field) => {
         currentMusicInfo[field] = null;
     })
 
@@ -44,6 +41,11 @@ ooooo   ooooo oooooooooooo ooooo        ooooooooo.   oooooooooooo ooooooooo.    
  888     888   888       o  888       o  888          888       o  888  `88b.  oo     .d8P
 o888o   o888o o888ooooood8 o888ooooood8 o888o        o888ooooood8 o888o  o888o 8""88888P'
 */
+    /**
+     * Zero padding a number
+     * @param {number} number number to pad
+     * @param {number} length
+     */
     function pad(number, length) {
         var str = String(number);
         while (str.length < length) {
@@ -53,7 +55,7 @@ o888o   o888o o888ooooood8 o888ooooood8 o888o        o888ooooood8 o888o  o888o 8
     }
 
     /**
-     * //Convert seconds to a time string acceptable to Rainmeter
+     * Convert seconds to a time string acceptable to Rainmeter
      * @param {number} timeInMs
      */
     function convertTimeToString(timeInMs) {
@@ -87,20 +89,17 @@ o888o   o888o o888ooooood8 o888ooooood8 o888o        o888ooooood8 o888o  o888o 8
             playpause: null,
             next: null,
             previous: null,
-            progress: null,
             progressSeconds: null,
             volume: null,
             repeat: null,
             shuffle: null,
-            toggleThumbsUp: null,
-            toggleThumbsDown: null,
             rating: null,
         };
     }
 
     //Use this object to define custom logic to retrieve data
     function resetMusicInfo() {
-        INFO_LIST.forEach(field => {
+        INFO_LIST.forEach((field) => {
             musicInfo[field] = null;
         })
         musicInfo.readyCheck = null;
@@ -116,18 +115,17 @@ ooooo     ooo ooooooooo.   oooooooooo.         .o.       ooooooooooooo ooooooooo
    `YbodP'    o888o        o888bood8P'   o88o     o8888o     o888o     o888ooooood8 o888o  o888o
 */
     function updateInfo() {
-        //Try catch for each updater to make sure info is fail safe
-        //This would be a lot cleaner if javascript had nice things like enums, then I could just foreach this
-
         if (musicInfo.readyCheck === null || musicInfo.readyCheck()) {
             INFO_LIST.forEach((field) => {
                 try {
-                    if (musicInfo[field] !== null) {
-                        let temp = musicInfo[field].call();
-                        if (temp !== null && currentMusicInfo[field] !== temp) {
-                            ws.send(`${field.toUpperCase()}:${temp}`);
-                            currentMusicInfo[field] = temp;
-                        }
+                    if (musicInfo[field] === null) {
+                        return;
+                    }
+
+                    let temp = musicInfo[field].call();
+                    if (temp !== null && currentMusicInfo[field] !== temp) {
+                        ws.send(`${field.toUpperCase()}:${temp}`);
+                        currentMusicInfo[field] = temp;
                     }
                 } catch (e) {
                     ws.send(
@@ -172,15 +170,9 @@ o888ooooood8       `8'       o888ooooood8 o8o        `8      o888o     8""88888P
             case "previous":
                 musicEvents.previous();
                 break;
-            case "setprogress":
-            case "setposition": {
-                if (musicEvents.progress !== null) {
-                    musicEvents.progress(parseFloat(info));
-                } else if (musicEvents.progressSeconds !== null) {
-                    musicEvents.progressSeconds(parseInt(info));
-                }
+            case "setposition":
+                musicEvents.progressSeconds(parseInt(info));
                 break;
-            }
             case "setvolume":
                 musicEvents.volume(parseInt(info) / 100);
                 break;
@@ -190,13 +182,7 @@ o888ooooood8       `8'       o888ooooood8 o8o        `8      o888o     8""88888P
             case "shuffle":
                 musicEvents.shuffle();
                 break;
-            case "togglethumbsup":
-                musicEvents.togglethumbsup();
-                break;
-            case "togglethumbsdown":
-                musicEvents.togglethumbsdown();
-                break;
-            case "setrating":
+            case "rating":
                 musicEvents.rating(parseInt(info));
                 break;
             case "search": {
@@ -312,8 +298,6 @@ oo     .d8P  888       o      888       `88.    .8'   888
         };
 
         ws.onmessage = (event) => fireEvent(event);
-
-        ws.onerror = (event) => console.log("Websocket Error:" + event);
     }
 
     window.onbeforeunload = () => {
@@ -331,22 +315,14 @@ oo     .d8P  888       o      888       `88.    .8'   888
         musicInfo.title = () =>
             Spicetify.Player.data.track.metadata.title || "N/A";
 
-        musicInfo.trackID = () => Spicetify.Player.data.track.uri || "";
-
         musicInfo.artist = () =>
             document
                 .getElementsByClassName("view-player")[0]
                 .getElementsByClassName("artist")[0]
                 .innerText.replace(/\n/, "");
 
-        musicInfo.artistID = () =>
-            Spicetify.Player.data.track.metadata.artist_uri || "";
-
         musicInfo.album = () =>
             Spicetify.Player.data.track.metadata.album_title || "N/A";
-
-        musicInfo.albumID = () =>
-            Spicetify.Player.data.track.metadata.album_uri || "";
 
         musicInfo.cover = () => {
             let currCover =
@@ -379,18 +355,18 @@ oo     .d8P  888       o      888       `88.    .8'   888
             if (isHeartAvailable) {
                 if (heart.classList.contains("active")) {
                     return 5;
-                } else {
-                    return 0;
                 }
+
+                return 0;
             } else {
                 const add = document.querySelector('[data-button="add"]');
                 if (
-                    add.attributes["data-interaction-intent"].value == "remove"
+                    add.attributes["data-interaction-intent"].value === "remove"
                 ) {
                     return 5;
-                } else {
-                    return 0;
                 }
+
+                return 0;
             }
         };
 
@@ -400,7 +376,6 @@ oo     .d8P  888       o      888       `88.    .8'   888
 
         resetEventHandler();
 
-        //Define custom check logic to make sure you are not trying to update info when nothing is playing
         musicEvents.readyCheck = () => (Spicetify.Player.data ? true : false);
 
         musicEvents.playpause = () => Spicetify.Player.togglePlay();
@@ -409,8 +384,6 @@ oo     .d8P  888       o      888       `88.    .8'   888
 
         musicEvents.previous = () => Spicetify.Player.back();
 
-        musicEvents.progress = (p) => Spicetify.Player.seek(p);
-
         musicEvents.progressSeconds = (p) => Spicetify.Player.seek(p * 1000);
 
         musicEvents.volume = (v) => Spicetify.Player.setVolume(v);
@@ -418,10 +391,6 @@ oo     .d8P  888       o      888       `88.    .8'   888
         musicEvents.repeat = () => Spicetify.Player.toggleRepeat();
 
         musicEvents.shuffle = () => Spicetify.Player.toggleShuffle();
-
-        musicEvents.toggleThumbsUp = () => Spicetify.Player.thumbUp();
-
-        musicEvents.toggleThumbsDown = () => Spicetify.Player.thumbDown();
 
         musicEvents.rating = (rating) => {
             const like = rating > 3;
