@@ -207,8 +207,9 @@ function ParseCoreSetting()
 	experimentalFeatures = SKIN:GetVariable("ExperimentalFeatures") == '1'
 	fastUserSwitching = SKIN:GetVariable("FastUserSwitching") == '1'
 	logging = SKIN:GetVariable("DisableUILogging") == '1'
-	devTool = SKIN:GetVariable("DevTool") == '1'
 	removeRTLRule = SKIN:GetVariable("RemoveRTLRule") == '1'
+	madeForYouHub = SKIN:GetVariable("MadeForYouHub") == '1'
+	songPage = SKIN:GetVariable("SongPage") == '1'
 end
 
 liveUpdate = false
@@ -605,7 +606,6 @@ function StartMod()
 	local totalApply = 3
 			+ (injectCSS and 1 or 0)
 			+ (theme and 1 or 0)
-			+ (devTool and 1 or 0)
 			+ (radio and 1 or 0)
 			+ (home and 1 or 0)
 			+ (lyric_alwaysShow and 1 or 0)
@@ -613,6 +613,8 @@ function StartMod()
 			+ (experimentalFeatures and 1 or 0)
 			+ (fastUserSwitching and 1 or 0)
 			+ (vis_highFramerate and 1 or 0)
+			+ (madeForYouHub and 1 or 0)
+			+ (songPage and 1 or 0)
 	UpdatePercent(totalApply)
 	UpdatePercent()
 	CheckSpotifyFolder()
@@ -903,14 +905,6 @@ function Finishing()
 
 	local modTable = {}
 
-	if (devTool) then
-		UpdateStatus('Enabling developer tools')
-		ModJS('settings', 'bundle', {
-			{"isEmployee=", "%1true||"}
-		})
-		UpdatePercent()
-	end
-
 	if (radio) then
 		UpdateStatus('Enabling Radio')
 		table.insert(modTable, {'radioIsVisible=', '%1true||', 1})
@@ -953,6 +947,18 @@ function Finishing()
 	if (fastUserSwitching) then
 		UpdateStatus('Enabling Fast user switching')
 		table.insert(modTable, {'[%w_]+(&&[%w_]+%.default.createElement%([%w_]+%.default,%{name:"switch%-user)', 'true%1', 1})
+		UpdatePercent()
+	end
+
+	if (madeForYouHub) then
+		UpdateStatus('Enabling Made For You hub')
+		table.insert(modTable, {'[%w_]+(&&[%w_]+%.default.createElement%([%w_]+%.default,%{isActive:/%^spotify:app:made%-for%-you)', 'true%1', 1})
+		UpdatePercent()
+	end
+
+	if (songPage) then
+		UpdateStatus('Enabling Song Page')
+		table.insert(modTable, {'window%.initialState%.isSongPageEnabled', 'true'})
 		UpdatePercent()
 	end
 
