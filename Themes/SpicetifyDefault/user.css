@@ -325,7 +325,7 @@ Collage of 3 album covers is usually seen in Browse and Chart.
 	border-radius: 10px 10px 0 0 !important;
 	text-align: left !important;
 	width: 100% !important;
-	margin: 0 !important;
+	margin: 0 20px !important;
 }
 /*
 We use round corner on cover so they look weird in original
