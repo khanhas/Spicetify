@@ -130,11 +130,10 @@
 
     const EMBEDDED_HIDE_ELEMENT_LIST =
         [
-            "div.GlueHeader__buttons",
+            "div.Header__buttons",
             '[data-ta-id="play-button"]',
             '[data-ta-id="card-button-add"]',
             '[data-ta-id="card-button-context-menu"]',
-            '[data-ta-id="play-button"]',
             '[data-ta-id="ta-table-cell-add"]',
             '[data-ta-id="ta-table-cell-more"]',
             'th[aria-label=""]',
@@ -223,7 +222,7 @@
 
         var embeddedApp = $(".embedded-app.active");
         if (embeddedApp.length > 0) {
-            embeddedApp.find(".GlueTableCellTrackNumber").each(function() {
+            embeddedApp.find(".TableCellTrackNumber").each(function() {
                 var songURI = $(this)
                     .parent()
                     .attr("data-ta-uri");
@@ -234,7 +233,7 @@
 
                 $(this).on("mouseover", function() {
                     var playButton = $(this).find(
-                        ".GlueTableCellTrackNumber__button-wrapper"
+                        ".TableCellTrackNumber__button-wrapper"
                     );
                     if (playButton.attr("djmode-injected") === "true") {
                         return;
