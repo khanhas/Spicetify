@@ -600,3 +600,13 @@ and add little glowing effect
 .Button--style-green {
 	color: var(--modspotify_main_bg) !important;
 }
+
+/* Display usable add playlist button */
+.LeftSidebarNewPlaylistButton__button {
+	padding: 0 168px !important;
+	padding-right: 40px;
+}
+
+.LeftSidebarNewPlaylistButton__text {
+	display: none !important;
+}
