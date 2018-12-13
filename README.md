@@ -1,5 +1,9 @@
 ![Logo](LOGO.svg)
 
+Tool to customize Spotify client UI and expand functionalities. Supports only Windows.  
+
+Linux and MacOS users, please check out https://github.com/khanhas/spicetify-cli
+
 [![GitHub release](https://img.shields.io/github/release/khanhas/Spicetify/all.svg?colorB=97CA00?label=version)](https://github.com/khanhas/Spicetify/releases/latest) [![Github All Releases](https://img.shields.io/github/downloads/khanhas/Spicetify/total.svg?colorB=97CA00)](https://github.com/khanhas/Spicetify/releases) [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/spicetify)
 
 ## How to use
