@@ -13,7 +13,7 @@ Linux and MacOS users, please check out https://github.com/khanhas/spicetify-cli
 **4.** Choose **Backup** in skin UI to start backing up original Spotify files  
 **5.** Pick color scheme, edit CSS then **Apply**  
 
-**Note:** Only Spotify normal version is supported. Windows Store version is under a write permission required folder so I can't make it to work. Normal Spotify installer can be downloaded [here](https://download.scdn.co/SpotifySetup.exe).
+**Note:** Only Spotify normal version is supported. Windows Store version is under a write permission required folder so I can't make it work. Normal Spotify installer can be downloaded [here](https://download.scdn.co/SpotifySetup.exe).
 
 ![Demo1](https://i.imgur.com/JcYs9Mj.png)
 
